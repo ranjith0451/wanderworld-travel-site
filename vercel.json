@@ -1,8 +1,28 @@
 {
   "rewrites": [
     {
+      "source": "/app.js",
+      "destination": "/app.js"
+    },
+    {
+      "source": "/data/countries.js",
+      "destination": "/data/countries.js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ]
 }

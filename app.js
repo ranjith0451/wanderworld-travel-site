@@ -12,17 +12,44 @@
     el.textContent = msg;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   };
 
-  const months = (window.TRAVEL_DATA && window.TRAVEL_DATA.months) || ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-  const country = (id) => {
-    const list = (window.TRAVEL_DATA && window.TRAVEL_DATA.countries) || [];
-    return list.find((c) => c.id === id);
+  // Robust dataset access
+  const getData = () => {
+    try {
+      return window.TRAVEL_DATA || {};
+    } catch (e) {
+      return {};
+    }
   };
 
-  // Hash router ---------------------------------------------------------------
+  // Scroll-based reveal animations
+  function initScrollReveal() {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const targets = qa('.reveal');
+    if (!targets.length) return;
+
+    if (prefersReduced) {
+      targets.forEach(el => el.classList.add('visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -28px 0px' }
+    );
+    targets.forEach((el) => observer.observe(el));
+  }
+
+  // Hash router
   const routes = {
     home: () => q('#home-hero'),
     monthwise: () => q('#monthwise'),
@@ -62,23 +89,21 @@
     })
   );
 
-  // Helpers -------------------------------------------------------------------
   function fmt(n) {
-    return '₹' + Number(n || 0).toLocaleString('en-IN');
+    const value = typeof n === 'number' ? n : 0;
+    return '₹' + Number(value).toLocaleString('en-IN');
   }
 
-  function seasonLabel(monthName, bestMonths) {
-    if (!bestMonths || !bestMonths.length) return 'Good time';
-    const idx = months.indexOf(monthName) + 1;
-    return bestMonths.includes(idx) ? 'Best time' : 'Good time';
-  }
-
-  // Month tabs + cards --------------------------------------------------------
-  let activeMonth = months[new Date().getMonth()] || months[0];
+  // Month tabs + cards
+  let activeMonth = null;
 
   function renderMonthTabs() {
     const root = q('#month-tabs');
     if (!root) return;
+    const data = getData();
+    const months = data.months || ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    if (!activeMonth) activeMonth = months[new Date().getMonth()] || months[0];
+
     root.innerHTML = months
       .map((m) => `<button class="month-chip${m === activeMonth ? ' active' : ''}" data-month="${m}">${m}</button>`)
       .join('');
@@ -94,44 +119,46 @@
   function renderMonthCards() {
     const root = q('#month-cards');
     if (!root) return;
-    const list = (window.TRAVEL_DATA && window.TRAVEL_DATA.countries) || [];
-    const blr = (window.TRAVEL_DATA && window.TRAVEL_DATA.blr_monthwise) || [];
-
-    const wanted = list
-      .map((c) => ({ ...c, season: seasonLabel(activeMonth, c.bestMonths) }))
-      .filter((c) => c.season !== 'Low season' || c.season === 'Good time')
-      .slice(0, 8);
-
-    root.innerHTML = wanted
-      .map(
-        (c) => `
-      <article class="card" data-country="${c.id}">
-        <div class="card__title">${c.flag || ''} ${c.name}</div>
-        <div class="card__meta">${c.region || ''} · ${activeMonth}: ${seasonLabel(activeMonth, c.bestMonths)}</div>
-        <div class="card__row">
-          <span class="card__pill">Low ${fmt(c.budget && c.budget.low)}</span>
-          <span class="card__pill">Mid ${fmt(c.budget && c.budget.mid)}</span>
-          <span class="card__pill">Lux ${fmt(c.budget && c.budget.luxury)}</span>
-        </div>
-        <div class="card__row" style="margin-top:10px">
-          ${(c.tags || []).map((t) => `<span class="card__pill">${t}</span>`).join('')}
-        </div>
-        <p style="margin-top:10px;color:#cbd5e1;font-size:12px">${c.visa || ''}</p>
-      </article>
-    `
-      )
+    const data = getData();
+    const list = data.countries || [];
+    root.innerHTML = list
+      .slice(0, 10)
+      .map((c) => {
+        const season = includeMonth(activeMonth, c.bestMonths) ? 'Best time' : 'Good time';
+        return `
+        <article class="card" data-country="${c.id}">
+          <div class="card__title">${c.flag || ''} ${c.name}</div>
+          <div class="card__meta">${c.region || ''} · ${activeMonth}: ${season}</div>
+          <div class="card__row">
+            <span class="card__pill">Low ${fmt((c.budget && c.budget.low))}</span>
+            <span class="card__pill">Mid ${fmt((c.budget && c.budget.mid))}</span>
+            <span class="card__pill">Lux ${fmt((c.budget && c.budget.luxury))}</span>
+          </div>
+          <div class="card__row" style="margin-top:10px">${(c.tags || []).map((t) => `<span class="card__pill">${t}</span>`).join('')}</div>
+          <p style="margin-top:10px;color:#cbd5e1;font-size:12px">${c.visa || ''}</p>
+        </article>
+      `;
+      })
       .join('');
   }
 
-  // India + immigration policies -----------------------------------------------
+  function includeMonth(monthName, bestMonths) {
+    if (!Array.isArray(bestMonths) || !bestMonths.length) return true;
+    const months = getData().months || ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const idx = months.indexOf(monthName) + 1;
+    return bestMonths.includes(idx);
+  }
+
+  // Policy grid
   function renderPolicyGrid() {
     const root = q('#policy-grid');
     if (!root) return;
-    const list = (window.TRAVEL_DATA && window.TRAVEL_DATA.countries) || [];
+    const data = getData();
+    const list = data.countries || [];
     root.innerHTML = list
       .map((c) => {
-        const req = c.id === 'in_goa' ? 'Domestic; no visa required.' : (c.visa || '');
-        const items = [req, `Currency: ${(c.currency || '')}`];
+        const req = c.visa || '';
+        const items = [req, `Currency: ${c.currency || ''}`];
         return `
         <article class="policy-card" data-country="${c.id}">
           <div class="policy-card__name">${c.flag || ''} ${c.name}</div>
@@ -146,17 +173,17 @@
       .join('');
   }
 
-  // Itinerary ------------------------------------------------------------------
+  // Itinerary
   function buildItinerary() {
     const destSel = q('#itinerary-destination');
     const daysSel = q('#itinerary-days');
     const out = q('#itinerary-output');
     const btn = q('#generate-itinerary');
     if (!destSel || !daysSel || !out) return;
+    const data = getData();
 
     if (!destSel.children.length) {
-      const list = (window.TRAVEL_DATA && window.TRAVEL_DATA.countries) || [];
-      list.forEach((c) => {
+      (data.countries || []).forEach((c) => {
         const opt = document.createElement('option');
         opt.value = c.id;
         opt.textContent = `${c.flag || ''} ${c.name}`;
@@ -165,14 +192,12 @@
     }
 
     btn.addEventListener('click', () => {
-      const c = country(destSel.value);
+      const c = byId(destSel.value);
       const days = parseInt(daysSel.value, 10);
-      if (!c || !c.itinerary) return toast('Pick a destination first');
-      const plan = c.itinerary[String(days)] || c.itinerary[Object.keys(c.itinerary)[0]];
+      if (!c) return toast('Pick a destination first');
+      const plan = (c.itinerary && c.itinerary[String(days)]) || (c.itinerary && c.itinerary[Object.keys(c.itinerary)[0]]);
       if (!plan) return toast('No itinerary for selected days');
-      out.innerHTML = `<div class="timeline">${plan
-        .map(
-          (st) => `
+      out.innerHTML = `<div class="timeline">${plan.map((st) => `
         <div class="timeline__item">
           <div class="timeline__dot"></div>
           <div class="timeline__content">
@@ -180,23 +205,21 @@
             <p class="timeline__desc">${(st.items || []).join(' · ')}</p>
           </div>
         </div>
-      `
-        )
-        .join('')}</div>`;
+      `).join('')}</div>`;
       toast(`${c.name} ${days}-day itinerary ready`);
     });
   }
 
-  // Budget estimator ----------------------------------------------------------
+  // Budget
   function buildBudget() {
     const destSel = q('#budget-destination');
     const out = q('#budget-output');
     const btn = q('#estimate-budget');
     if (!destSel || !out) return;
+    const data = getData();
 
     if (!destSel.children.length) {
-      const list = (window.TRAVEL_DATA && window.TRAVEL_DATA.countries) || [];
-      list.forEach((c) => {
+      (data.countries || []).forEach((c) => {
         const opt = document.createElement('option');
         opt.value = c.id;
         opt.textContent = `${c.flag || ''} ${c.name}`;
@@ -205,11 +228,11 @@
     }
 
     btn.addEventListener('click', () => {
-      const c = country(destSel.value);
+      const c = byId(destSel.value);
       const tier = q('#budget-tier')?.value || 'mid';
       const travelers = parseInt((q('#budget-travelers')?.value) || '1', 10);
-      if (!c || !c.budget) return toast('Pick a destination first');
-      const band = c.budget[tier] || c.budget.mid || 0;
+      if (!c) return toast('Pick a destination first');
+      const band = (c.budget && c.budget[tier]) || (c.budget && c.budget.mid) || 0;
       const flight = Math.round(band * 0.45);
       const stay = Math.round(band * 0.28);
       const food = Math.round(band * 0.15);
@@ -227,12 +250,13 @@
     });
   }
 
-  // Search overlay / in-page search -------------------------------------------
+  // Search
   function doSearch(query) {
     const qLower = (query || '').toLowerCase();
     const nodes = qa('[data-country]');
+    const data = getData();
     const results = nodes.filter((node) => {
-      const c = country(node.dataset.country);
+      const c = byId(node.dataset.country);
       if (!c) return false;
       return [c.name, c.region, c.visa, c.currency, ...(c.tags || [])].join(' ').toLowerCase().includes(qLower);
     });
@@ -243,7 +267,7 @@
       if (!qLower) { container.innerHTML = ''; return; }
       container.innerHTML = results
         .map((node) => {
-          const c = country(node.dataset.country);
+          const c = byId(node.dataset.country);
           return `<div class="search-item" data-country="${c.id}"><p class="search-item__title">${c.flag || ''} ${c.name}</p><p class="search-item__desc">${c.region || ''} · ${c.visa || ''}</p></div>`;
         })
         .join('');
@@ -255,7 +279,7 @@
       if (!root) return;
       qa('.search-item', root).forEach((item) => {
         item.onclick = () => {
-          const c = country(item.dataset.country);
+          const c = byId(item.dataset.country);
           navigateTo('monthwise');
           toast(`Opened ${c.name}`);
         };
@@ -273,16 +297,13 @@
     const closeBtn = q('#close-search');
 
     input?.addEventListener('input', (e) => doSearch(e.target.value));
-    input?.addEventListener('focus', () => {
-      if (input.value.trim()) doSearch(input.value);
-    });
-
+    input?.addEventListener('focus', () => { if (input.value.trim()) doSearch(input.value); });
     overlayInput?.addEventListener('input', (e) => doSearch(e.target.value));
     openBtn?.addEventListener('click', () => overlay?.classList.add('open'));
     closeBtn?.addEventListener('click', () => overlay?.classList.remove('open'));
   }
 
-  // World explorer + 3D globe -------------------------------------------------
+  // Globe
   function initGlobe() {
     const container = q('#hero-globe');
     const canvas = q('#world-canvas');
@@ -298,44 +319,37 @@
     if (target === canvas) {
       const { clientWidth: w = target.clientWidth, clientHeight: h = target.clientHeight } = target.getBoundingClientRect();
       renderer.setSize(w, h, false);
-      cam = new THREE.PerspectiveCamera(48, (w || 800) / (h || 500), 0.2, 60);
+      cam = new THREE.PerspectiveCamera(48, (w || 800) / Math.max(h || 500, 1), 0.2, 60);
       cam.position.set(0, 0.6, 3.2);
     } else {
       const rect = target.getBoundingClientRect();
       const w = rect.width || 320;
       const h = rect.height || 180;
       renderer.setSize(w, h, false);
-      cam = new THREE.PerspectiveCamera(50, w / h, 0.2, 40);
+      cam = new THREE.PerspectiveCamera(50, w / Math.max(h, 1), 0.2, 40);
       cam.position.set(0, 0.15, 1.8);
     }
     scene.add(cam);
-    const light = new THREE.DirectionalLight('#ffffff', 1.0);
-    light.position.set(5, 3, 5);
-    scene.add(light);
+    scene.add(new THREE.DirectionalLight('#ffffff', 1.0));
     scene.add(new THREE.AmbientLight('#b1c6ff', 0.6));
+    scene.children[0].position.set(5, 3, 5);
 
-    const geometry = new THREE.SphereGeometry(1, 64, 64);
-    const material = new THREE.MeshPhongMaterial({
-      color: '#12395a',
-      emissive: '#02101d',
-      flatShading: false,
-      transparent: true,
-      opacity: 0.92,
-    });
-    const globe = new THREE.Mesh(geometry, material);
+    const globe = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 64, 64),
+      new THREE.MeshPhongMaterial({ color: '#12395a', emissive: '#02101d', transparent: true, opacity: 0.92 })
+    );
     scene.add(globe);
-
-    const wireGeo = new THREE.SphereGeometry(1.005, 36, 24);
-    const wireMat = new THREE.MeshBasicMaterial({ color: '#7ef7ff', wireframe: true, transparent: true, opacity: 0.15 });
-    const wireMesh = new THREE.Mesh(wireGeo, wireMat);
-    globe.add(wireMesh);
+    globe.add(new THREE.Mesh(
+      new THREE.SphereGeometry(1.005, 36, 24),
+      new THREE.MeshBasicMaterial({ color: '#7ef7ff', wireframe: true, transparent: true, opacity: 0.14 })
+    ));
 
     const dotMat = new THREE.MeshBasicMaterial({ color: '#ffcf7f' });
-    const list = (window.TRAVEL_DATA && window.TRAVEL_DATA.countries) || [];
-    list.forEach((c) => {
+    (getData().countries || []).forEach((c) => {
       if (!c.coordinates) return;
-      const phi = (90 - c.coordinates.lat) * (Math.PI / 180);
-      const theta = (c.coordinates.lng + 180) * (Math.PI / 180);
+      const { lat, lng } = c.coordinates;
+      const phi = (90 - lat) * (Math.PI / 180);
+      const theta = (lng + 180) * (Math.PI / 180);
       const r = 1.012;
       const x = -(r * Math.sin(phi) * Math.cos(theta));
       const z = r * Math.sin(phi) * Math.sin(theta);
@@ -348,7 +362,6 @@
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-
     function setPointer(event) {
       const rect = (target === canvas ? canvas : container).getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -357,18 +370,13 @@
 
     target.addEventListener('pointermove', (event) => {
       setPointer(event);
-      if (target === canvas || target === container) {
-        raycaster.setFromCamera(pointer, cam);
-        const hits = raycaster.intersectObjects(globe.children, true);
-        const dotHit = hits.find((h) => !!h.object.userData?.countryId);
-        if (dotHit) {
-          const c = country(dotHit.object.userData.countryId);
-          if (tooltip && c) {
-            tooltip.textContent = `${c.flag || ''} ${c.name}\n${c.region || ''}`;
-            tooltip.classList.add('visible');
-          }
-        } else if (tooltip) tooltip.classList.remove('visible');
-      }
+      raycaster.setFromCamera(pointer, cam);
+      const hits = raycaster.intersectObjects(globe.children, true);
+      const dotHit = hits.find((h) => !!h.object.userData?.countryId);
+      if (dotHit) {
+        const c = byId(dotHit.object.userData.countryId);
+        if (tooltip && c) { tooltip.textContent = `${c.flag || ''} ${c.name}\n${c.region || ''}`; tooltip.classList.add('visible'); }
+      } else if (tooltip) tooltip.classList.remove('visible');
     });
 
     target.addEventListener('click', (event) => {
@@ -377,15 +385,14 @@
       const hits = raycaster.intersectObjects(globe.children, true);
       const dotHit = hits.find((h) => !!h.object.userData?.countryId);
       if (dotHit) {
-        const c = country(dotHit.object.userData.countryId);
-        const cardTitle = document.querySelector(`[data-country="${c.id}"] .card__title`);
-        if (cardTitle && 'scrollIntoView' in cardTitle) cardTitle.scrollIntoView({ behavior: 'smooth' });
+        const c = byId(dotHit.object.userData.countryId);
+        const title = document.querySelector(`[data-country="${c.id}"] .card__title`);
+        if (title && 'scrollIntoView' in title) title.scrollIntoView({ behavior: 'smooth' });
         navigateTo('monthwise');
         toast(`Scrolled to ${c.name}`);
       }
     });
 
-    const clock = new THREE.Clock();
     function resize() {
       const rect = (target === canvas ? canvas : container).getBoundingClientRect();
       const w = rect.width || 320;
@@ -396,19 +403,19 @@
     }
     window.addEventListener('resize', resize);
 
-    function loop() {
+    const clock = new THREE.Clock();
+    (function loop() {
       requestAnimationFrame(loop);
       const delta = clock.getDelta();
-      globe.rotation.y += 0.15 * delta;
+      globe.rotation.y += 0.18 * delta;
       const t = performance.now() / 1000;
-      globe.rotation.x = Math.sin(t * 0.25) * 0.12;
+      globe.rotation.x = Math.sin(t * 0.22) * 0.12;
       renderer.render(scene, cam);
-    }
+    })();
     resize();
-    loop();
   }
 
-  // Mobile nav collision with toast -------------------------------------------
+  // Safe areas
   function initSafeAreas() {
     if (!q('#toast')) return;
     const update = () => {
@@ -420,7 +427,12 @@
     if (window.visualViewport) window.visualViewport.addEventListener('resize', update);
   }
 
-  // Init ----------------------------------------------------------------------
+  function byId(id) {
+    const list = (getData().countries) || [];
+    return list.find((c) => c.id === id);
+  }
+
+  // Init
   renderMonthTabs();
   renderMonthCards();
   renderPolicyGrid();
@@ -428,8 +440,7 @@
   buildBudget();
   initSearch();
   initSafeAreas();
+  initScrollReveal();
   if (document.readyState === 'complete' || document.readyState === 'interactive') initGlobe();
   else window.addEventListener('DOMContentLoaded', initGlobe);
-
-  window.addEventListener('resize', () => {});
 })();

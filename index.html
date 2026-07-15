@@ -3,17 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes" />
-  <meta name="theme-color" content="#0a0e27" />
+  <meta name="theme-color" content="#070b22" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="WanderWorld 3D" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg" />
   <link rel="apple-touch-icon" href="/assets/icons/icon.svg" />
   <title>WanderWorld 3D — Travel from Bengaluru & Global Explorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -33,43 +32,43 @@
       </div>
     </header>
 
-    <main class="app-shell__main" id="main">
-      <section class="hero" id="home-hero">
+    <main class="app-shell__main">
+      <section class="section hero" id="home-hero">
         <div class="hero__glow"></div>
-        <div class="hero__content">
+        <div class="hero__content reveal">
           <h1 class="hero__title">Travel smarter.<br/><span class="hero__accent">Explore further.</span></h1>
-          <p class="hero__sub">Month-wise best destinations from Bengaluru · Complete itineraries · Visa & immigration policies for every country.</p>
+          <p class="hero__sub">Month-wise best destinations from Bengaluru · Complete itineraries · Visa & immigration policies · Budget planning</p>
           <div class="hero__actions">
             <a class="btn btn--primary" href="/#monthwise">Best trips this month</a>
             <a class="btn btn--ghost" href="/#world">3D World Explorer</a>
           </div>
         </div>
-        <div class="hero__globe" id="hero-globe"></div>
+        <div class="hero__globe reveal" id="hero-globe"></div>
       </section>
 
       <section class="section" id="monthwise">
-        <div class="section__header">
+        <div class="section__header reveal">
           <h2 class="section__title">Best month-wise trips from Bengaluru</h2>
           <p class="section__sub">Pick a month · See destinations, flights, stays, itinerary, and visa rules.</p>
         </div>
-        <div class="month-tabs" id="month-tabs" role="tablist"></div>
-        <div class="month-cards" id="month-cards"></div>
+        <div class="month-tabs reveal" id="month-tabs" role="tablist"></div>
+        <div class="month-cards reveal" id="month-cards"></div>
       </section>
 
       <section class="section" id="india">
-        <div class="section__header">
+        <div class="section__header reveal">
           <h2 class="section__title">India & International Immigration</h2>
           <p class="section__sub">Visa, entry, stay, and transit policies by country · With India comparison.</p>
         </div>
-        <div class="policy-grid" id="policy-grid"></div>
+        <div class="policy-grid reveal" id="policy-grid"></div>
       </section>
 
       <section class="section" id="itinerary">
-        <div class="section__header">
+        <div class="section__header reveal">
           <h2 class="section__title">Itinerary builder</h2>
           <p class="section__sub">5–7 day reusable plans with timing, entry fees, transit, and buffers.</p>
         </div>
-        <div class="itinerary-panel" id="itinerary-panel">
+        <div class="itinerary-panel reveal" id="itinerary-panel">
           <div class="itinerary-controls">
             <select class="input" id="itinerary-destination">
               <option value="">Select destination</option>
@@ -86,11 +85,11 @@
       </section>
 
       <section class="section" id="budget">
-        <div class="section__header">
+        <div class="section__header reveal">
           <h2 class="section__title">Budget estimator</h2>
           <p class="section__sub">Round-trip flight band, stays, food, commute, and misc.</p>
         </div>
-        <div class="budget-panel" id="budget-panel">
+        <div class="budget-panel reveal" id="budget-panel">
           <div class="budget-controls">
             <select class="input" id="budget-destination"></select>
             <select class="input" id="budget-tier">
@@ -111,22 +110,22 @@
       </section>
 
       <section class="section" id="world">
-        <div class="section__header">
+        <div class="section__header reveal">
           <h2 class="section__title">World explorer</h2>
-          <p class="section__sub">3D motion globe with country cards by month, weather, and visa.</p>
+          <p class="section__sub">3D motion globe with country data, weather, visa, itinerary links.</p>
         </div>
-        <div class="world-panel">
+        <div class="world-panel reveal">
           <canvas id="world-canvas" class="world-canvas"></canvas>
           <div class="world-tooltip" id="world-tooltip"></div>
         </div>
       </section>
 
       <section class="section" id="search-section">
-        <div class="section__header">
+        <div class="section__header reveal">
           <h2 class="section__title">Search</h2>
           <p class="section__sub">Countries, cities, visa types, itineraries.</p>
         </div>
-        <div class="search-panel">
+        <div class="search-panel reveal">
           <input class="input search-input" id="search-input" placeholder="Search places, visas, itineraries…" />
           <div class="search-results" id="search-results"></div>
         </div>
@@ -167,6 +166,7 @@
     <div class="toast" id="toast"></div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="/data/countries.js"></script>
   <script src="/app.js"></script>
 </body>

@@ -2,10 +2,11 @@
   "name": "travel-site-next",
   "version": "1.0.0",
   "private": true,
-  "description": "Deploy-ready static travel site.",
+  "description": "Deploy-ready static travel site with SPA fallback and PWA support.",
   "scripts": {
     "serve": "npx serve . -l 3000",
     "start": "npx serve . -l 3000",
+    "test:offline": "npx serve . -l 3000",
     "docker:build": "docker build -t travel-site-next .",
     "docker:run": "docker run --rm -p 8080:80 travel-site-next"
   },

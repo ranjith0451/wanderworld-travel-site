@@ -4,7 +4,7 @@ const STATIC_ASSETS = [
   '/index.html',
   '/styles.css',
   '/app.js',
-  '/images/'
+  '/data/countries.js'
 ];
 
 self.addEventListener('install', (event) => {
