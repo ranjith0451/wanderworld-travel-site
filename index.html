@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes" />
+  <meta name="theme-color" content="#0a0e27" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WanderWorld 3D" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="/assets/icons/icon.svg" />
+  <title>WanderWorld 3D — Travel from Bengaluru & Global Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="app-shell__header">
+      <div class="brand">
+        <span class="brand__mark">✦</span>
+        <div>
+          <div class="brand__title">WanderWorld <span class="brand__badge">3D</span></div>
+          <div class="brand__sub">Bengaluru outbound · World explorer</div>
+        </div>
+      </div>
+      <div class="app-shell__actions">
+        <button class="icon-btn" id="search-trigger" aria-label="Search">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-shell__main" id="main">
+      <section class="hero" id="home-hero">
+        <div class="hero__glow"></div>
+        <div class="hero__content">
+          <h1 class="hero__title">Travel smarter.<br/><span class="hero__accent">Explore further.</span></h1>
+          <p class="hero__sub">Month-wise best destinations from Bengaluru · Complete itineraries · Visa & immigration policies for every country.</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="/#monthwise">Best trips this month</a>
+            <a class="btn btn--ghost" href="/#world">3D World Explorer</a>
+          </div>
+        </div>
+        <div class="hero__globe" id="hero-globe"></div>
+      </section>
+
+      <section class="section" id="monthwise">
+        <div class="section__header">
+          <h2 class="section__title">Best month-wise trips from Bengaluru</h2>
+          <p class="section__sub">Pick a month · See destinations, flights, stays, itinerary, and visa rules.</p>
+        </div>
+        <div class="month-tabs" id="month-tabs" role="tablist"></div>
+        <div class="month-cards" id="month-cards"></div>
+      </section>
+
+      <section class="section" id="india">
+        <div class="section__header">
+          <h2 class="section__title">India & International Immigration</h2>
+          <p class="section__sub">Visa, entry, stay, and transit policies by country · With India comparison.</p>
+        </div>
+        <div class="policy-grid" id="policy-grid"></div>
+      </section>
+
+      <section class="section" id="itinerary">
+        <div class="section__header">
+          <h2 class="section__title">Itinerary builder</h2>
+          <p class="section__sub">5–7 day reusable plans with timing, entry fees, transit, and buffers.</p>
+        </div>
+        <div class="itinerary-panel" id="itinerary-panel">
+          <div class="itinerary-controls">
+            <select class="input" id="itinerary-destination">
+              <option value="">Select destination</option>
+            </select>
+            <select class="input" id="itinerary-days">
+              <option value="5">5 days</option>
+              <option value="6">6 days</option>
+              <option value="7" selected>7 days</option>
+            </select>
+            <button class="btn btn--primary" id="generate-itinerary">Build plan</button>
+          </div>
+          <div class="itinerary-output" id="itinerary-output"></div>
+        </div>
+      </section>
+
+      <section class="section" id="budget">
+        <div class="section__header">
+          <h2 class="section__title">Budget estimator</h2>
+          <p class="section__sub">Round-trip flight band, stays, food, commute, and misc.</p>
+        </div>
+        <div class="budget-panel" id="budget-panel">
+          <div class="budget-controls">
+            <select class="input" id="budget-destination"></select>
+            <select class="input" id="budget-tier">
+              <option value="low">Low budget</option>
+              <option value="mid" selected>Comfort</option>
+              <option value="luxury">Luxury</option>
+            </select>
+            <select class="input" id="budget-travelers">
+              <option value="1">1 traveller</option>
+              <option value="2">2 travellers</option>
+              <option value="3">3 travellers</option>
+              <option value="4">4 travellers</option>
+            </select>
+            <button class="btn btn--primary" id="estimate-budget">Estimate</button>
+          </div>
+          <div class="budget-output" id="budget-output"></div>
+        </div>
+      </section>
+
+      <section class="section" id="world">
+        <div class="section__header">
+          <h2 class="section__title">World explorer</h2>
+          <p class="section__sub">3D motion globe with country cards by month, weather, and visa.</p>
+        </div>
+        <div class="world-panel">
+          <canvas id="world-canvas" class="world-canvas"></canvas>
+          <div class="world-tooltip" id="world-tooltip"></div>
+        </div>
+      </section>
+
+      <section class="section" id="search-section">
+        <div class="section__header">
+          <h2 class="section__title">Search</h2>
+          <p class="section__sub">Countries, cities, visa types, itineraries.</p>
+        </div>
+        <div class="search-panel">
+          <input class="input search-input" id="search-input" placeholder="Search places, visas, itineraries…" />
+          <div class="search-results" id="search-results"></div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="app-shell__bottom" id="bottom-nav">
+      <a class="nav-item active" data-target="home">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>
+        <span>Home</span>
+      </a>
+      <a class="nav-item" data-target="monthwise">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Month</span>
+      </a>
+      <a class="nav-item" data-target="world">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10A15 15 0 0112 2z"/></svg>
+        <span>World</span>
+      </a>
+      <a class="nav-item" data-target="budget">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h6M9 15h6"/></svg>
+        <span>Budget</span>
+      </a>
+      <a class="nav-item" data-target="search-section">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search</span>
+      </a>
+    </nav>
+
+    <div class="search-overlay" id="search-overlay">
+      <div class="search-overlay__bar">
+        <input class="input" id="overlay-search-input" placeholder="Search countries, places, visas…" />
+        <button class="icon-btn" id="close-search">✕</button>
+      </div>
+      <div class="search-overlay__results" id="overlay-results"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="/data/countries.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
