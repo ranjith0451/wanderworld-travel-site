@@ -432,6 +432,118 @@
     return list.find((c) => c.id === id);
   }
 
+  function renderDetourDestinations() {
+    const root = q('#detour-cards'); if (!root) return;
+    root.innerHTML = `
+      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Barcelona</strong></p><p class="detour-card__to">🏰 Girona</p><p class="detour-card__benefit">Medieval charm, ~90% fewer crowds</p></article>
+      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Dubai</strong></p><p class="detour-card__to">🏙️ Abu Dhabi</p><p class="detour-card__benefit">More authentic local culture</p></article>
+      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Tokyo</strong></p><p class="detour-card__to">⛩️ Kanazawa</p><p class="detour-card__benefit">Traditional temples with shorter waits</p></article>
+      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Phuket</strong></p><p class="detour-card__to">🏝️ Krabi</p><p class="detour-card__benefit">Similar coastline · 50% fewer tourists</p></article>
+      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Milan</strong></p><p class="detour-card__to">🎨 Brescia</p><p class="detour-card__benefit">Renaissance charm · lower nightly cost</p></article>
+      <article class="detour-card"><p class="detour-card__from">Instead of <strong>New York</strong></p><p class="detour-card__to">🗽 Philadelphia</p><p class="detour-card__benefit">Comparable museums · cheaper stays</p></article>
+    `;
+  }
+
+  function initMoodQuiz() {
+    const form = q('#mood-quiz-form'); if (!form) return;
+    form.addEventListener('submit', (e) => { e.preventDefault(); const mood = new FormData(form).get('mood'); applyMoodFilter(mood); });
+  }
+
+  function applyMoodFilter(mood) {
+    const data = getData();
+    const filters = {
+      beach: c => (c.tags || []).some(t => /beach/i.test(t)),
+      culture: c => (c.tags || []).some(t => /heritage|culture|history/i.test(t)),
+      adventure: c => (c.tags || []).some(t => /adventure|hiking|safari/i.test(t)),
+      budget: c => (c.costs?.flights?.low || 99999) < 40000,
+      eco: c => (c.sustainability?.rating || 0) >= 3.5
+    };
+    const filtered = (data.countries || []).filter(filters[mood] || (() => true));
+    const results = q('#quiz-results'); if (!results) return;
+    results.innerHTML = `
+      <p style="text-align: center; color: #cbd5e1; margin-bottom: 14px;">Found ${filtered.length} destinations for you!</p>
+      ${filtered.slice(0, 8).map((c) => `
+        <article class="card" data-country="${c.id}">
+          <div class="card__title">${c.flag || ''} ${c.name}</div>
+          <div class="card__meta">${c.region || ''}</div>
+          <div class="card__row"><span class="card__pill">Low ${fmt(c.costs?.flights?.low || 0)}</span><span class="card__pill">Mid ${fmt(c.costs?.flights?.mid || 0)}</span></div>
+        </article>
+      `).join('')}
+    `;
+    toast(`Found ${filtered.length} destinations matching your style`);
+  }
+
+  function initComparisonTool() {
+    const c1Sel = q('#compare-country-1');
+    const c2Sel = q('#compare-country-2');
+    const btn = q('#compare-btn');
+    const data = getData();
+    if (!c1Sel || !c2Sel || !btn) return;
+    [c1Sel, c2Sel].forEach((sel) => {
+      (data.countries || []).forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.flag || ''} ${c.name}`;
+        sel.appendChild(opt);
+      });
+    });
+    btn.addEventListener('click', () => {
+      const a = byId(c1Sel.value);
+      const b = byId(c2Sel.value);
+      if (!a || !b) return toast('Select two destinations to compare');
+      const out = q('#comparison-result'); if (!out) return;
+      out.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);color:var(--text);">
+          <tr><td><strong>Metric</strong></td><td><strong>${a.flag} ${a.name}</strong></td><td><strong>${b.flag} ${b.name}</strong></td></tr>
+          <tr><td>Low flight</td><td>${fmt(a.costs?.flights?.low || 0)}</td><td>${fmt(b.costs?.flights?.low || 0)}</td></tr>
+          <tr><td>Best months</td><td>${(a.bestMonths || []).slice(0, 3).join(', ') || 'Year-round'}</td><td>${(b.bestMonths || []).slice(0, 3).join(', ') || 'Year-round'}</td></tr>
+          <tr><td>Visa</td><td>${a.visa?.type || 'Confirm requirements'}</td><td>${b.visa?.type || 'Confirm requirements'}</td></tr>
+          <tr><td>Region</td><td>${a.region}</td><td>${b.region}</td></tr>
+          <tr><td>Sustainability</td><td>${a.sustainability?.rating ?? 'N/A'}/5 🌿</td><td>${b.sustainability?.rating ?? 'N/A'}/5 🌿</td></tr>
+        </table>
+      `;
+      toast(`Comparing ${a.name} and ${b.name}`);
+    });
+  }
+
+  function renderSetJettingDestinations() {
+    const root = q('#setjetting-cards'); if (!root) return;
+    root.innerHTML = (getData().countries || [])
+      .filter((c) => (c.movies || []).length > 0)
+      .slice(0, 10)
+      .map((c) => `<article class="setjetting-card"><p class="setjetting-card__title">${c.flag} ${c.name}</p><p class="setjetting-card__movie">Featured in: ${(c.movies || []).slice(0, 2).join(', ')}</p></article>`)
+      .join('');
+  }
+
+  function recordCountryVisit(countryId) {
+    if (!countryId) return;
+    const key = 'wanderworld_passport_stamps';
+    const stamps = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!stamps.includes(countryId)) { stamps.push(countryId); localStorage.setItem(key, JSON.stringify(stamps)); }
+  }
+
+  function initPassportStamps() {
+    const key = 'wanderworld_passport_stamps';
+    const stamps = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!stamps.length) return;
+    if (stamps.length >= 10) toast('🏆 Globetrotter! You have explored 10+ destinations.');
+  }
+
+  function wirePassportStamps() {
+    qa('.card[data-country]').forEach((card) => {
+      card.addEventListener('click', () => recordCountryVisit(card.dataset.country));
+    });
+  }
+
+  function initPhase1() {
+    renderDetourDestinations();
+    initMoodQuiz();
+    initComparisonTool();
+    renderSetJettingDestinations();
+    initPassportStamps();
+    wirePassportStamps();
+  }
+
   // Init
   renderMonthTabs();
   renderMonthCards();
@@ -441,6 +553,7 @@
   initSearch();
   initSafeAreas();
   initScrollReveal();
+  initPhase1();
   if (document.readyState === 'complete' || document.readyState === 'interactive') initGlobe();
   else window.addEventListener('DOMContentLoaded', initGlobe);
 })();
