@@ -127,7 +127,7 @@
         const season = includeMonth(activeMonth, c.bestMonths) ? 'Best time' : 'Good time';
         return `
         <article class="card" data-country="${c.id}">
-          <div class="card__title">${c.flag || ''} ${c.name}</div>
+          <div class="card__title">${c.flag || ''} ${c.name || ''}</div>
           <div class="card__meta">${c.region || ''} · ${activeMonth}: ${season}</div>
           <div class="card__row">
             <span class="card__pill">Low ${fmt((c.budget && c.budget.low))}</span>
@@ -135,7 +135,7 @@
             <span class="card__pill">Lux ${fmt((c.budget && c.budget.luxury))}</span>
           </div>
           <div class="card__row" style="margin-top:10px">${(c.tags || []).map((t) => `<span class="card__pill">${t}</span>`).join('')}</div>
-          <p style="margin-top:10px;color:#cbd5e1;font-size:12px">${c.visa || ''}</p>
+          <p style="margin-top:10px;color:#cbd5e1;font-size:12px">${(typeof c.visa === 'string' ? c.visa : (c.visa && c.visa.type) || '')}</p>
         </article>
       `;
       })
@@ -157,11 +157,12 @@
     const list = data.countries || [];
     root.innerHTML = list
       .map((c) => {
-        const req = c.visa || '';
+        const visaText = typeof c.visa === 'string' ? c.visa : ((c.visa && c.visa.type) || '');
+        const req = visaText;
         const items = [req, `Currency: ${c.currency || ''}`];
         return `
         <article class="policy-card" data-country="${c.id}">
-          <div class="policy-card__name">${c.flag || ''} ${c.name}</div>
+          <div class="policy-card__name">${c.flag || ''} ${c.name || ''}</div>
           <div class="policy-card__status">${c.region || ''} · Best ${(c.bestMonths || []).slice(0, 3).join(', ')}</div>
           <ul class="policy-card__list">
             ${items.map((i) => `<li>${i}</li>`).join('')}
@@ -186,7 +187,7 @@
       (data.countries || []).forEach((c) => {
         const opt = document.createElement('option');
         opt.value = c.id;
-        opt.textContent = `${c.flag || ''} ${c.name}`;
+        opt.textContent = `${c.flag || ''} ${c.name || ''}`;
         destSel.appendChild(opt);
       });
     }
@@ -206,7 +207,7 @@
           </div>
         </div>
       `).join('')}</div>`;
-      toast(`${c.name} ${days}-day itinerary ready`);
+      toast(`${c.name || ''} ${days}-day itinerary ready`);
     });
   }
 
@@ -222,7 +223,7 @@
       (data.countries || []).forEach((c) => {
         const opt = document.createElement('option');
         opt.value = c.id;
-        opt.textContent = `${c.flag || ''} ${c.name}`;
+        opt.textContent = `${c.flag || ''} ${c.name || ''}`;
         destSel.appendChild(opt);
       });
     }
@@ -246,7 +247,7 @@
       out.innerHTML = `${['Flight approx', 'Hotel/stay', 'Food', 'Local commute', 'Misc / buffer']
         .map((label, i) => card(label, travelers * [flight, stay, food, local, misc][i]))
         .join('')}<div class="budget-cards">${card(`${travelers} traveller${travelers > 1 ? 's' : ''} · Total`, total)}</div>`;
-      toast(`Estimated trip budget for ${c.name}`);
+      toast(`Estimated trip budget for ${c.name || ''}`);
     });
   }
 
@@ -268,7 +269,7 @@
       container.innerHTML = results
         .map((node) => {
           const c = byId(node.dataset.country);
-          return `<div class="search-item" data-country="${c.id}"><p class="search-item__title">${c.flag || ''} ${c.name}</p><p class="search-item__desc">${c.region || ''} · ${c.visa || ''}</p></div>`;
+          return `<div class="search-item" data-country="${c.id}"><p class="search-item__title">${c.flag || ''} ${c.name || ''}</p><p class="search-item__desc">${c.region || ''} · ${(typeof c.visa === 'string' ? c.visa : (c.visa && c.visa.type) || '')}</p></div>`;
         })
         .join('');
     };
@@ -281,7 +282,7 @@
         item.onclick = () => {
           const c = byId(item.dataset.country);
           navigateTo('monthwise');
-          toast(`Opened ${c.name}`);
+          toast(`Opened ${c.name || ''}`);
         };
       });
     };
@@ -375,7 +376,7 @@
       const dotHit = hits.find((h) => !!h.object.userData?.countryId);
       if (dotHit) {
         const c = byId(dotHit.object.userData.countryId);
-        if (tooltip && c) { tooltip.textContent = `${c.flag || ''} ${c.name}\n${c.region || ''}`; tooltip.classList.add('visible'); }
+        if (tooltip && c) { tooltip.textContent = `${c.flag || ''} ${c.name || ''}\n${c.region || ''}`; tooltip.classList.add('visible'); }
       } else if (tooltip) tooltip.classList.remove('visible');
     });
 
@@ -389,7 +390,7 @@
         const title = document.querySelector(`[data-country="${c.id}"] .card__title`);
         if (title && 'scrollIntoView' in title) title.scrollIntoView({ behavior: 'smooth' });
         navigateTo('monthwise');
-        toast(`Scrolled to ${c.name}`);
+        toast(`Scrolled to ${c.name || ''}`);
       }
     });
 
@@ -464,7 +465,7 @@
       <p style="text-align: center; color: #cbd5e1; margin-bottom: 14px;">Found ${filtered.length} destinations for you!</p>
       ${filtered.slice(0, 8).map((c) => `
         <article class="card" data-country="${c.id}">
-          <div class="card__title">${c.flag || ''} ${c.name}</div>
+          <div class="card__title">${c.flag || ''} ${c.name || ''}</div>
           <div class="card__meta">${c.region || ''}</div>
           <div class="card__row"><span class="card__pill">Low ${fmt(c.costs?.flights?.low || 0)}</span><span class="card__pill">Mid ${fmt(c.costs?.flights?.mid || 0)}</span></div>
         </article>
@@ -483,7 +484,7 @@
       (data.countries || []).forEach((c) => {
         const opt = document.createElement('option');
         opt.value = c.id;
-        opt.textContent = `${c.flag || ''} ${c.name}`;
+        opt.textContent = `${c.flag || ''} ${c.name || ''}`;
         sel.appendChild(opt);
       });
     });
@@ -511,7 +512,7 @@
     root.innerHTML = (getData().countries || [])
       .filter((c) => (c.movies || []).length > 0)
       .slice(0, 10)
-      .map((c) => `<article class="setjetting-card"><p class="setjetting-card__title">${c.flag} ${c.name}</p><p class="setjetting-card__movie">Featured in: ${(c.movies || []).slice(0, 2).join(', ')}</p></article>`)
+      .map((c) => `<article class="setjetting-card"><p class="setjetting-card__title">${c.flag || ''} ${c.name || ''}</p><p class="setjetting-card__movie">Featured in: ${(c.movies || []).slice(0, 2).join(', ')}</p></article>`)
       .join('');
   }
 
