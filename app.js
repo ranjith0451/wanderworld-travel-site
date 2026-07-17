@@ -259,7 +259,8 @@
     const results = nodes.filter((node) => {
       const c = byId(node.dataset.country);
       if (!c) return false;
-      return [c.name, c.region, c.visa, c.currency, ...(c.tags || [])].join(' ').toLowerCase().includes(qLower);
+      const visaText = typeof c.visa === 'string' ? c.visa : ((c.visa && c.visa.type) || '');
+      return [c.name, c.region, visaText, c.currency, ...(c.tags || [])].join(' ').toLowerCase().includes(qLower);
     });
     const list = q('#search-results');
     const overlayList = q('#overlay-results');
