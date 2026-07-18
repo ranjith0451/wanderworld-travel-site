@@ -15,13 +15,4 @@ jobs:
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
       - name: Run Lighthouse CI
-        run: |
-          lhci autorun \
-            --collect.staticDistDir=. \
-            --assert.assertions.performance=0.65 \
-            --assert.assertions.accessibility=0.95 \
-            --assert.assertions.errors-in-console=off \
-            --assert.assertions.unminified-css=off \
-            --assert.assertions.unminified-javascript=off \
-            --assert.assertions.unused-javascript=off \
-            --assert.assertions.render-blocking-resources=off
+        run: lhci autorun --collect.staticDistDir=.
