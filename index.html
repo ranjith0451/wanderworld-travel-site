@@ -3,77 +3,200 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes" />
-  <meta name="theme-color" content="#070b22" />
+  <meta name="theme-color" content="#050714" />
+  <meta name="description" content="WanderWorld 3D — Premium travel companion. Month-wise destinations, 3D world explorer, visa, itineraries, and budgets from Bengaluru to 24+ countries." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WanderWorld" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg" />
   <link rel="apple-touch-icon" href="/assets/icons/icon.svg" />
-  <title>WanderWorld 3D — Travel from Bengaluru & Global Explorer</title>
+
+  <title>WanderWorld 3D — Travel slower. Go further.</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+
+  <!-- Motion stack (CDN, no build) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script defer src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/styles-premium.css" />
 </head>
 <body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <!-- Premium preloader -->
+  <div class="preloader" aria-hidden="true">
+    <div class="preloader__inner">
+      <div class="preloader__mark">
+        <svg viewBox="0 0 100 100" fill="none">
+          <defs>
+            <linearGradient id="preloaderG" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#00d4ff"/>
+              <stop offset="1" stop-color="#7c5cff"/>
+            </linearGradient>
+          </defs>
+          <g stroke="url(#preloaderG)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <circle cx="50" cy="50" r="34"/>
+            <path d="M16 50 H 84 M50 16 V 84"/>
+            <path d="M22 30 Q50 50 78 30 M22 70 Q50 50 78 70" stroke-width="1.8"/>
+            <circle cx="50" cy="50" r="3" fill="url(#preloaderG)"/>
+          </g>
+        </svg>
+      </div>
+      <div class="preloader__label">WanderWorld</div>
+      <div class="preloader__bar"></div>
+    </div>
+  </div>
+
   <div id="app">
     <header class="app-shell__header">
-      <div class="brand">
-        <span class="brand__mark">✦</span>
+      <a class="brand" href="#home-hero" aria-label="WanderWorld home">
+        <span class="brand__mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/>
+          </svg>
+        </span>
         <div>
-          <div class="brand__title">WanderWorld <span class="brand__badge">3D</span></div>
+          <div class="brand__title">WanderWorld<span class="brand__badge">3D</span></div>
           <div class="brand__sub">Bengaluru outbound · World explorer</div>
         </div>
-      </div>
+      </a>
       <div class="app-shell__actions">
-        <button class="icon-btn" id="search-trigger" aria-label="Search">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <button class="icon-btn" id="search-trigger" aria-label="Open search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
       </div>
     </header>
 
-    <main class="app-shell__main">
-      <section class="section hero" id="home-hero">
-        <div class="hero__glow"></div>
-        <div class="hero__content reveal">
-          <h1 class="hero__title">Travel smarter.<br/><span class="hero__accent">Explore further.</span></h1>
-          <p class="hero__sub">Month-wise best destinations from Bengaluru · Complete itineraries · Visa & immigration policies · Budget planning</p>
-          <div class="hero__actions">
-            <a class="btn btn--primary" href="/#monthwise">Best trips this month</a>
-            <a class="btn btn--ghost" href="/#world">3D World Explorer</a>
+    <main class="app-shell__main" id="main">
+      <!-- ============================================================
+           HERO — premium full-viewport
+           ============================================================ -->
+      <section class="section hero" id="home-hero" aria-label="Hero" data-chapter="discover" data-chapter-hue="280">
+        <div class="hero__inner">
+          <div class="hero__content">
+            <div class="hero__eyebrow">
+              <span class="dot"></span>
+              <span>24 countries · 2025 trending</span>
+            </div>
+            <h1 class="hero__title">
+              <span class="line"><span>Travel slower.</span></span>
+              <span class="line"><span class="accent">Go further.</span></span>
+            </h1>
+            <p class="hero__sub">Month-wise destinations, cinematic itineraries, real visa and budget intelligence — from Bengaluru to the world. All in one premium companion.</p>
+            <div class="hero__actions">
+              <a class="btn btn--primary btn--lg" href="#monthwise">
+                Best trips this month
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+              <a class="btn btn--ghost btn--lg" href="#world">3D World Explorer</a>
+            </div>
+            <div class="hero__meta">
+              <div class="hero__meta-item">
+                <div class="hero__meta-num"><span data-counter="24" data-suffix="+">0</span></div>
+                <div class="hero__meta-label">Countries</div>
+              </div>
+              <div class="hero__meta-item">
+                <div class="hero__meta-num"><span data-counter="12" data-suffix="">0</span></div>
+                <div class="hero__meta-label">Curated months</div>
+              </div>
+              <div class="hero__meta-item">
+                <div class="hero__meta-num"><span data-counter="98" data-suffix="%">0</span></div>
+                <div class="hero__meta-label">Visa accuracy</div>
+              </div>
+              <div class="hero__meta-item">
+                <div class="hero__meta-num"><span data-counter="5" data-suffix="★">0</span></div>
+                <div class="hero__meta-label">User rating</div>
+              </div>
+            </div>
+          </div>
+          <div class="hero__globe-wrap">
+            <div class="hero__globe" id="hero-globe"></div>
+            <div class="hero__floaty hero__floaty--a"><span class="emoji">🌴</span> Bali · Shoulder season</div>
+            <div class="hero__floaty hero__floaty--b"><span class="emoji">🗼</span> Tokyo · Cherry blossoms</div>
+            <div class="hero__floaty hero__floaty--c"><span class="emoji">🏔️</span> Swiss Alps · Snow</div>
           </div>
         </div>
-        <div class="hero__globe reveal" id="hero-globe"></div>
+        <div class="scroll-cue" aria-hidden="true">
+          <span>Scroll</span>
+          <span class="scroll-cue__line"></span>
+        </div>
       </section>
 
-      <section class="section" id="monthwise">
+      <!-- ============================================================
+           MONTHWISE
+           ============================================================ -->
+      <section class="section" id="monthwise" aria-label="Month-wise trips" data-chapter="decide" data-chapter-hue="30">
         <div class="section__header reveal">
-          <h2 class="section__title">Best month-wise trips from Bengaluru</h2>
-          <p class="section__sub">Pick a month · See destinations, flights, stays, itinerary, and visa rules.</p>
+          <span class="section__eyebrow">Month-wise intelligence</span>
+          <h2 class="section__title">Best trips from Bengaluru, picked for this month</h2>
+          <p class="section__sub">Pick a month · See destinations, flights, stays, itinerary, and visa rules — all in one tap.</p>
         </div>
         <div class="month-tabs reveal" id="month-tabs" role="tablist"></div>
-        <div class="month-cards reveal" id="month-cards"></div>
+        <div class="card-grid reveal" id="month-cards" data-stagger></div>
       </section>
 
-      <section class="section" id="india">
+      <!-- ============================================================
+           TRENDING 2025 — NEW premium horizontal strip
+           ============================================================ -->
+      <section class="section" id="trending-2025" aria-label="Trending 2025" data-chapter="discover" data-chapter-hue="280">
         <div class="section__header reveal">
-          <h2 class="section__title">India & International Immigration</h2>
-          <p class="section__sub">Visa, entry, stay, and transit policies by country · With India comparison.</p>
+          <span class="section__eyebrow">2025 trending</span>
+          <h2 class="section__title">Where the world is going next</h2>
+          <p class="section__sub">Hand-picked detours, sleeper hits, and seasonal standouts everyone's booking right now.</p>
         </div>
-        <div class="policy-grid reveal" id="policy-grid"></div>
+        <!-- Removed 'reveal' class to prevent GSAP pinning conflict -->
+        <div class="trending-strip" id="trending-strip"></div>
       </section>
 
-      <section class="section" id="itinerary">
+      <!-- ============================================================
+           INDIA POLICY
+           ============================================================ -->
+      <section class="section" id="india" aria-label="Visa & immigration" data-chapter="decide" data-chapter-hue="30">
         <div class="section__header reveal">
-          <h2 class="section__title">Itinerary builder</h2>
-          <p class="section__sub">5–7 day reusable plans with timing, entry fees, transit, and buffers.</p>
+          <span class="section__eyebrow">Visa & immigration</span>
+          <h2 class="section__title">Entry rules, simplified</h2>
+          <p class="section__sub">Visa, stay, currency, and best months for every country — with India comparisons baked in.</p>
+        </div>
+        <div class="policy-grid reveal" id="policy-grid" data-stagger></div>
+      </section>
+
+      <!-- ============================================================
+           WORLD — 3D Globe
+           ============================================================ -->
+      <section class="section" id="world" aria-label="3D world explorer" data-chapter="world" data-chapter-hue="220">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">World explorer</span>
+          <h2 class="section__title">Touch the planet</h2>
+          <p class="section__sub">A motion-driven 3D globe with country data, weather hints, visa, and itinerary links — all in one canvas.</p>
+        </div>
+        <div class="world-panel reveal">
+          <canvas id="world-canvas" class="world-canvas" aria-label="3D globe"></canvas>
+          <div class="world-tooltip" id="world-tooltip" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ITINERARY
+           ============================================================ -->
+      <section class="section" id="itinerary" aria-label="Itinerary builder" data-chapter="plan" data-chapter-hue="160">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">Itinerary builder</span>
+          <h2 class="section__title">5–7 day plans, ready in a tap</h2>
+          <p class="section__sub">Reusable plans with timing, entry fees, transit, and buffers — designed by travelers who've been there.</p>
         </div>
         <div class="itinerary-panel reveal" id="itinerary-panel">
           <div class="itinerary-controls">
-            <select class="input" id="itinerary-destination">
+            <select class="input" id="itinerary-destination" aria-label="Destination">
               <option value="">Select destination</option>
             </select>
-            <select class="input" id="itinerary-days">
+            <select class="input" id="itinerary-days" aria-label="Number of days">
               <option value="5">5 days</option>
               <option value="6">6 days</option>
               <option value="7" selected>7 days</option>
@@ -84,20 +207,24 @@
         </div>
       </section>
 
-      <section class="section" id="budget">
+      <!-- ============================================================
+           BUDGET
+           ============================================================ -->
+      <section class="section" id="budget" aria-label="Budget estimator" data-chapter="plan" data-chapter-hue="160">
         <div class="section__header reveal">
-          <h2 class="section__title">Budget estimator</h2>
-          <p class="section__sub">Round-trip flight band, stays, food, commute, and misc.</p>
+          <span class="section__eyebrow">Budget estimator</span>
+          <h2 class="section__title">Real costs, no surprises</h2>
+          <p class="section__sub">Round-trip flight band, stays, food, commute, and misc — sized to your travel style and group.</p>
         </div>
         <div class="budget-panel reveal" id="budget-panel">
           <div class="budget-controls">
-            <select class="input" id="budget-destination"></select>
-            <select class="input" id="budget-tier">
+            <select class="input" id="budget-destination" aria-label="Destination"></select>
+            <select class="input" id="budget-tier" aria-label="Travel tier">
               <option value="low">Low budget</option>
               <option value="mid" selected>Comfort</option>
               <option value="luxury">Luxury</option>
             </select>
-            <select class="input" id="budget-travelers">
+            <select class="input" id="budget-travelers" aria-label="Travellers">
               <option value="1">1 traveller</option>
               <option value="2">2 travellers</option>
               <option value="3">3 travellers</option>
@@ -109,110 +236,159 @@
         </div>
       </section>
 
-      <section class="section" id="world">
+      <!-- ============================================================
+           DETOUR DESTINATIONS
+           ============================================================ -->
+      <section class="section" id="detour-picks" aria-label="Detour destinations" data-chapter="pick" data-chapter-hue="200">
         <div class="section__header reveal">
-          <h2 class="section__title">World explorer</h2>
-          <p class="section__sub">3D motion globe with country data, weather, visa, itinerary links.</p>
+          <span class="section__eyebrow">Skip the crowds</span>
+          <h2 class="section__title">Hidden gems near popular cities</h2>
+          <p class="section__sub">Less touristy alternatives with the same magic — and your wallet intact.</p>
         </div>
-        <div class="world-panel reveal">
-          <canvas id="world-canvas" class="world-canvas"></canvas>
-          <div class="world-tooltip" id="world-tooltip"></div>
-        </div>
+        <div class="card-grid reveal" id="detour-cards" data-stagger></div>
       </section>
 
-      
-      <section class="section" id="detour-picks">
+      <!-- ============================================================
+           SET-JETTING — NEW cinematic
+           ============================================================ -->
+      <section class="section" id="setjetting-section" aria-label="Set-jetting" data-chapter="compare" data-chapter-hue="340">
         <div class="section__header reveal">
-          <h2 class="section__title">Skip the Crowds: Hidden Gems</h2>
-          <p class="section__sub">Less touristy alternatives near popular cities.</p>
+          <span class="section__eyebrow">Set-jetting</span>
+          <h2 class="section__title">Travel like your favorite movie</h2>
+          <p class="section__sub">Visit the real-world locations behind the films and shows on your watchlist.</p>
         </div>
-        <div class="detour-cards reveal" id="detour-cards"></div>
+        <div class="card-grid reveal" id="setjetting-cards" data-stagger></div>
       </section>
 
-      <section class="section" id="mood-quiz-section">
+      <!-- ============================================================
+           MOOD QUIZ
+           ============================================================ -->
+      <section class="section" id="mood-quiz-section" aria-label="Travel style quiz" data-chapter="pick" data-chapter-hue="200">
         <div class="section__header reveal">
-          <h2 class="section__title">What's Your Travel Style?</h2>
+          <span class="section__eyebrow">Find your style</span>
+          <h2 class="section__title">What's your travel style?</h2>
+          <p class="section__sub">5 quick questions, then a hand-picked shortlist of destinations that fit you.</p>
         </div>
         <form id="mood-quiz-form" class="quiz-form reveal">
-          <label class="quiz-option"><input type="radio" name="mood" value="beach" /> 🏝️ Beach & Relaxation</label>
-          <label class="quiz-option"><input type="radio" name="mood" value="culture" /> 🏛️ Culture & History</label>
-          <label class="quiz-option"><input type="radio" name="mood" value="adventure" /> ⛰️ Adventure & Hiking</label>
-          <label class="quiz-option"><input type="radio" name="mood" value="budget" /> 💰 Budget Hacker</label>
-          <label class="quiz-option"><input type="radio" name="mood" value="eco" /> 🌱 Eco-Conscious</label>
-          <button type="submit" class="btn btn--primary">Show Me Destinations</button>
+          <label class="quiz-option">
+            <input type="radio" name="mood" value="beach" />
+            <span class="emoji">🏝️</span>
+            <span>Beach &amp; relaxation — sun, sand, slow.</span>
+          </label>
+          <label class="quiz-option">
+            <input type="radio" name="mood" value="culture" />
+            <span class="emoji">🏛️</span>
+            <span>Culture &amp; history — museums, food, old streets.</span>
+          </label>
+          <label class="quiz-option">
+            <input type="radio" name="mood" value="adventure" />
+            <span class="emoji">⛰️</span>
+            <span>Adventure &amp; hiking — peaks, treks, thrills.</span>
+          </label>
+          <label class="quiz-option">
+            <input type="radio" name="mood" value="budget" />
+            <span class="emoji">💰</span>
+            <span>Budget hacker — value first, comfort second.</span>
+          </label>
+          <label class="quiz-option">
+            <input type="radio" name="mood" value="eco" />
+            <span class="emoji">🌱</span>
+            <span>Eco-conscious — low impact, local-first.</span>
+          </label>
+          <button type="submit" class="btn btn--primary">Show me destinations</button>
         </form>
         <div id="quiz-results" class="quiz-results"></div>
       </section>
 
-      <section class="section" id="comparison-section">
+      <!-- ============================================================
+           COMPARISON
+           ============================================================ -->
+      <section class="section" id="comparison-section" aria-label="Destination comparison" data-chapter="compare" data-chapter-hue="340">
         <div class="section__header reveal">
-          <h2 class="section__title">Compare Destinations</h2>
-          <p class="section__sub">Side-by-side comparison of flights, stays, climate, and activities.</p>
+          <span class="section__eyebrow">Compare</span>
+          <h2 class="section__title">Two destinations, side by side</h2>
+          <p class="section__sub">Flights, climate, visa, sustainability — see how they stack up at a glance.</p>
         </div>
         <div class="comparison-panel reveal">
-          <select class="input" id="compare-country-1"><option>Select first destination</option></select>
-          <select class="input" id="compare-country-2"><option>Select second destination</option></select>
+          <select class="input" id="compare-country-1" aria-label="First destination">
+            <option value="">Select first destination</option>
+          </select>
+          <select class="input" id="compare-country-2" aria-label="Second destination">
+            <option value="">Select second destination</option>
+          </select>
           <button class="btn btn--primary" id="compare-btn">Compare</button>
         </div>
         <div id="comparison-result" class="comparison-result"></div>
       </section>
 
-      <section class="section" id="setjetting-section">
+      <!-- ============================================================
+           SEARCH
+           ============================================================ -->
+      <section class="section" id="search-section" aria-label="Search" data-chapter="discover" data-chapter-hue="280">
         <div class="section__header reveal">
-          <h2 class="section__title">Travel Like Your Favorite Movie</h2>
-          <p class="section__sub">Visit locations featured in films and TV shows.</p>
-        </div>
-        <div class="setjetting-cards reveal" id="setjetting-cards"></div>
-      </section>
-
-      <section class="section" id="search-section">
-        <div class="section__header reveal">
-          <h2 class="section__title">Search</h2>
-          <p class="section__sub">Countries, cities, visa types, itineraries.</p>
+          <span class="section__eyebrow">Search</span>
+          <h2 class="section__title">Find anything, fast</h2>
+          <p class="section__sub">Countries, cities, visa types, itineraries — one search box.</p>
         </div>
         <div class="search-panel reveal">
-          <input class="input search-input" id="search-input" placeholder="Search places, visas, itineraries…" />
+          <input class="input search-input" id="search-input" type="search" placeholder="Search countries, cities, visas…" aria-label="Search" />
           <div class="search-results" id="search-results"></div>
         </div>
       </section>
+
+      <!-- ============================================================
+           FOOTER
+           ============================================================ -->
+      <footer class="section" style="padding: 32px 18px; border-top: 1px solid rgba(255,255,255,0.06); text-align: center; color: var(--text-2); font-size: 12px;">
+        <p>WanderWorld 3D · Premium travel companion · Built with motion, glass, and care</p>
+      </footer>
     </main>
 
-    <nav class="app-shell__bottom" id="bottom-nav">
-      <a class="nav-item active" data-target="home">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>
+    <!-- ============================================================
+         BOTTOM NAV — Apple dock style
+         ============================================================ -->
+    <nav class="app-shell__bottom bottom-nav" id="bottom-nav" aria-label="Primary">
+      <a class="nav-item active" data-target="home" href="#home-hero">
+        <span class="nav-item__indicator"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>
         <span>Home</span>
       </a>
-      <a class="nav-item" data-target="monthwise">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <a class="nav-item" data-target="monthwise" href="#monthwise">
+        <span class="nav-item__indicator"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <span>Month</span>
       </a>
-      <a class="nav-item" data-target="world">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10A15 15 0 0112 2z"/></svg>
+      <a class="nav-item" data-target="world" href="#world">
+        <span class="nav-item__indicator"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10A15 15 0 0112 2z"/></svg>
         <span>World</span>
       </a>
-      <a class="nav-item" data-target="budget">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h6M9 15h6"/></svg>
+      <a class="nav-item" data-target="budget" href="#budget">
+        <span class="nav-item__indicator"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h6M9 15h6"/></svg>
         <span>Budget</span>
       </a>
-      <a class="nav-item" data-target="search-section">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <a class="nav-item" data-target="search-section" href="#search-section">
+        <span class="nav-item__indicator"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span>Search</span>
       </a>
     </nav>
 
-    <div class="search-overlay" id="search-overlay">
+    <div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label="Search">
       <div class="search-overlay__bar">
-        <input class="input" id="overlay-search-input" placeholder="Search countries, places, visas…" />
-        <button class="icon-btn" id="close-search">✕</button>
+        <input class="input" id="overlay-search-input" type="search" placeholder="Search countries, places, visas…" aria-label="Search" style="flex:1" />
+        <button class="icon-btn" id="close-search" aria-label="Close search">✕</button>
       </div>
       <div class="search-overlay__results" id="overlay-results"></div>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="/data/countries.js"></script>
   <script src="/app.js"></script>
+  <script src="/app-motion.js"></script>
 </body>
 </html>

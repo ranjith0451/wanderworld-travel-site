@@ -24,31 +24,6 @@
     }
   };
 
-  // Scroll-based reveal animations
-  function initScrollReveal() {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const targets = qa('.reveal');
-    if (!targets.length) return;
-
-    if (prefersReduced) {
-      targets.forEach(el => el.classList.add('visible'));
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.08, rootMargin: '0px 0px -28px 0px' }
-    );
-    targets.forEach((el) => observer.observe(el));
-  }
-
   // Hash router
   const routes = {
     home: () => q('#home-hero'),
@@ -70,13 +45,13 @@
     location.hash = hash;
   }
 
+  // Phase 10: Removed manual active class toggling here. 
+  // The IntersectionObserver in app-motion.js now handles the .active state.
   function activateSection(key) {
-    Object.values(routes).forEach((el) => el && el.classList.remove('section--active'));
     const target = routes[key];
-    if (target) target.classList.add('section--active');
-    qa('.nav-item').forEach((n) => n.classList.toggle('active', n.dataset.target === key));
-    const section = target;
-    if (section && 'scrollIntoView' in section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (target && 'scrollIntoView' in target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   window.addEventListener('hashchange', () => activateSection(currentHash()));
@@ -125,17 +100,22 @@
       .slice(0, 10)
       .map((c) => {
         const season = includeMonth(activeMonth, c.bestMonths) ? 'Best time' : 'Good time';
+        const backdrop = renderBackdrop(c, { w: 600, h: 380 });
         return `
         <article class="card" data-country="${c.id}">
-          <div class="card__title">${c.flag || ''} ${c.name || ''}</div>
-          <div class="card__meta">${c.region || ''} · ${activeMonth}: ${season}</div>
-          <div class="card__row">
-            <span class="card__pill">Low ${fmt((c.budget && c.budget.low))}</span>
-            <span class="card__pill">Mid ${fmt((c.budget && c.budget.mid))}</span>
-            <span class="card__pill">Lux ${fmt((c.budget && c.budget.luxury))}</span>
+          <div class="card__backdrop" style="background-image:url('${backdrop}');"></div>
+          <div class="card__shine"></div>
+          <div class="card__body">
+            <div class="card__title">${c.flag || ''} ${c.name || ''}</div>
+            <div class="card__meta">${c.region || ''} · ${activeMonth}: ${season}</div>
+            <div class="card__row">
+              <span class="card__pill">Low ${fmt((c.budget && c.budget.low))}</span>
+              <span class="card__pill">Mid ${fmt((c.budget && c.budget.mid))}</span>
+              <span class="card__pill">Lux ${fmt((c.budget && c.budget.luxury))}</span>
+            </div>
+            <div class="card__row" style="margin-top:10px">${(c.tags || []).map((t) => `<span class="card__pill">${t}</span>`).join('')}</div>
+            <p style="margin-top:10px;color:#cbd5e1;font-size:12px">${(typeof c.visa === 'string' ? c.visa : (c.visa && c.visa.type) || '')}</p>
           </div>
-          <div class="card__row" style="margin-top:10px">${(c.tags || []).map((t) => `<span class="card__pill">${t}</span>`).join('')}</div>
-          <p style="margin-top:10px;color:#cbd5e1;font-size:12px">${(typeof c.visa === 'string' ? c.visa : (c.visa && c.visa.type) || '')}</p>
         </article>
       `;
       })
@@ -310,25 +290,24 @@
     const container = q('#hero-globe');
     const canvas = q('#world-canvas');
     const tooltip = q('#world-tooltip');
-    const target = container || canvas;
-    if (!target || typeof THREE === 'undefined') return;
+    const host = canvas || container;
+    if (!host || typeof THREE === 'undefined') return;
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const scene = new THREE.Scene();
     let cam;
-    if (target === canvas) {
-      const { clientWidth: w = target.clientWidth, clientHeight: h = target.clientHeight } = target.getBoundingClientRect();
-      renderer.setSize(w, h, false);
-      cam = new THREE.PerspectiveCamera(48, (w || 800) / Math.max(h || 500, 1), 0.2, 60);
+    const rect = host.getBoundingClientRect();
+    const w = rect.width || 320;
+    const h = rect.height || 240;
+    renderer.setSize(w, h, false);
+    cam = host === canvas
+      ? new THREE.PerspectiveCamera(48, (w || 800) / Math.max(h || 500, 1), 0.2, 60)
+      : new THREE.PerspectiveCamera(50, w / Math.max(h, 1), 0.2, 40);
+    if (host === canvas) {
       cam.position.set(0, 0.6, 3.2);
     } else {
-      const rect = target.getBoundingClientRect();
-      const w = rect.width || 320;
-      const h = rect.height || 180;
-      renderer.setSize(w, h, false);
-      cam = new THREE.PerspectiveCamera(50, w / Math.max(h, 1), 0.2, 40);
       cam.position.set(0, 0.15, 1.8);
     }
     scene.add(cam);
@@ -345,6 +324,30 @@
       new THREE.SphereGeometry(1.005, 36, 24),
       new THREE.MeshBasicMaterial({ color: '#7ef7ff', wireframe: true, transparent: true, opacity: 0.14 })
     ));
+
+    // Phase 6: Globe v2 Atmosphere (Fresnel Rim Glow)
+    const atmosphereGeometry = new THREE.SphereGeometry(1.15, 64, 64);
+    const atmosphereMaterial = new THREE.ShaderMaterial({
+        vertexShader: `
+            varying vec3 vNormal;
+            void main() {
+                vNormal = normalize( normalMatrix * normal );
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            }
+        `,
+        fragmentShader: `
+            varying vec3 vNormal;
+            void main() {
+                float intensity = pow( 0.65 - dot( vNormal, vec3(0.0, 0.0, 1.0) ), 2.0 );
+                gl_FragColor = vec4( 0.3, 0.6, 1.0, 1.0 ) * intensity;
+            }
+        `,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        transparent: true
+    });
+    const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+    scene.add(atmosphere);
 
     const dotMat = new THREE.MeshBasicMaterial({ color: '#ffcf7f' });
     (getData().countries || []).forEach((c) => {
@@ -365,7 +368,7 @@
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     function setPointer(event) {
-      const rect = (target === canvas ? canvas : container).getBoundingClientRect();
+      const rect = host.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     }
@@ -396,9 +399,9 @@
     });
 
     function resize() {
-      const rect = (target === canvas ? canvas : container).getBoundingClientRect();
+      const rect = host.getBoundingClientRect();
       const w = rect.width || 320;
-      const h = rect.height || 180;
+      const h = rect.height || 240;
       renderer.setSize(w, h, false);
       if (cam.isPerspectiveCamera) cam.aspect = w / Math.max(h, 1);
       cam.updateProjectionMatrix();
@@ -434,16 +437,79 @@
     return list.find((c) => c.id === id);
   }
 
+  // Generative SVG backdrop
+  function renderBackdrop(country, opts) {
+    const o = opts || {};
+    const [c1, c2, c3] = (country && country.palette) || ['#7c5cff', '#00d4ff', '#0a0e2a'];
+    const w = o.w || 480;
+    const h = o.h || 600;
+    const seed = ((country && country.id) || 'x').replace(/[^a-z0-9]/gi, '');
+    const id = `bd-${seed}-${w}x${h}`;
+    const r = (n) => Math.round(n * 100) / 100;
+    const cx1 = r(w * 0.78);
+    const cy1 = r(h * 0.22);
+    const cx2 = r(w * 0.12);
+    const cy2 = r(h * 0.78);
+    const moonR = r(Math.min(w, h) * 0.22);
+    const blobR = r(Math.min(w, h) * 0.18);
+    const ringOffset = ((country && country.id && country.id.charCodeAt(0)) || 7) % 5;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='xMidYMid slice'>
+      <defs>
+        <linearGradient id='bg-${id}' x1='0' y1='0' x2='1' y2='1'>
+          <stop offset='0' stop-color='${c1}'/>
+          <stop offset='0.55' stop-color='${c2}' stop-opacity='0.9'/>
+          <stop offset='1' stop-color='${c3}'/>
+        </linearGradient>
+        <radialGradient id='glow-${id}' cx='${cx1 / w}' cy='${cy1 / h}' r='0.65'>
+          <stop offset='0' stop-color='${c1}' stop-opacity='0.55'/>
+          <stop offset='1' stop-color='${c1}' stop-opacity='0'/>
+        </radialGradient>
+        <radialGradient id='moon-${id}' cx='0.5' cy='0.5' r='0.5'>
+          <stop offset='0' stop-color='${c2}' stop-opacity='0.4'/>
+          <stop offset='1' stop-color='${c2}' stop-opacity='0'/>
+        </radialGradient>
+        <filter id='noise-${id}' x='0' y='0'>
+          <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/>
+          <feColorMatrix values='0 0 0 0 1   0 0 0 0 1   0 0 0 0 1   0 0 0 0.06 0'/>
+        </filter>
+      </defs>
+      <rect width='${w}' height='${h}' fill='url(#bg-${id})'/>
+      <rect width='${w}' height='${h}' fill='url(#glow-${id})'/>
+      <circle cx='${cx1}' cy='${cy1}' r='${moonR}' fill='url(#moon-${id})'/>
+      <circle cx='${cx2}' cy='${cy2}' r='${blobR}' fill='${c3}' opacity='0.5'/>
+      <path d='M0 ${r(h * 0.68)} Q ${r(w * 0.5)} ${r(h * 0.58)} ${w} ${r(h * 0.72)} L ${w} ${h} L 0 ${h} Z' fill='${c3}' opacity='0.45'/>
+      <path d='M0 ${r(h * 0.82)} Q ${r(w * 0.6)} ${r(h * 0.74)} ${w} ${r(h * 0.86)} L ${w} ${h} L 0 ${h} Z' fill='${c3}' opacity='0.6'/>
+      <g opacity='0.18' fill='none' stroke='white' stroke-width='0.6' stroke-linecap='round'>
+        <path d='M0 ${r(h * (0.36 + ringOffset * 0.01))} Q ${r(w * 0.5)} ${r(h * (0.3 + ringOffset * 0.01))} ${w} ${r(h * (0.38 + ringOffset * 0.01))}'/>
+        <path d='M0 ${r(h * (0.46 + ringOffset * 0.012))} Q ${r(w * 0.5)} ${r(h * (0.4 + ringOffset * 0.012))} ${w} ${r(h * (0.48 + ringOffset * 0.012))}'/>
+      </g>
+      <circle cx='${r(w * 0.5)}' cy='${r(h * 0.18)}' r='1.2' fill='white' opacity='0.5'/>
+      <circle cx='${r(w * 0.62)}' cy='${r(h * 0.32)}' r='0.8' fill='white' opacity='0.4'/>
+      <circle cx='${r(w * 0.34)}' cy='${r(h * 0.42)}' r='1' fill='white' opacity='0.35'/>
+      <rect width='${w}' height='${h}' filter='url(#noise-${id})'/>
+    </svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
   function renderDetourDestinations() {
     const root = q('#detour-cards'); if (!root) return;
-    root.innerHTML = `
-      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Barcelona</strong></p><p class="detour-card__to">🏰 Girona</p><p class="detour-card__benefit">Medieval charm, ~90% fewer crowds</p></article>
-      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Dubai</strong></p><p class="detour-card__to">🏙️ Abu Dhabi</p><p class="detour-card__benefit">More authentic local culture</p></article>
-      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Tokyo</strong></p><p class="detour-card__to">⛩️ Kanazawa</p><p class="detour-card__benefit">Traditional temples with shorter waits</p></article>
-      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Phuket</strong></p><p class="detour-card__to">🏝️ Krabi</p><p class="detour-card__benefit">Similar coastline · 50% fewer tourists</p></article>
-      <article class="detour-card"><p class="detour-card__from">Instead of <strong>Milan</strong></p><p class="detour-card__to">🎨 Brescia</p><p class="detour-card__benefit">Renaissance charm · lower nightly cost</p></article>
-      <article class="detour-card"><p class="detour-card__from">Instead of <strong>New York</strong></p><p class="detour-card__to">🗽 Philadelphia</p><p class="detour-card__benefit">Comparable museums · cheaper stays</p></article>
-    `;
+    const pairs = [
+      { main: 'Barcelona', detour: 'Girona', emoji: '🏰', benefit: 'Medieval charm · ~90% fewer crowds', savings: '€30/night' },
+      { main: 'Dubai', detour: 'Abu Dhabi', emoji: '🏙️', benefit: 'More authentic local culture', savings: '₹4K/night' },
+      { main: 'Tokyo', detour: 'Kanazawa', emoji: '⛩️', benefit: 'Traditional temples · shorter waits', savings: '₹6K/night' },
+      { main: 'Phuket', detour: 'Krabi', emoji: '🏝️', benefit: 'Same coastline · 50% fewer tourists', savings: '₹3K/night' },
+      { main: 'Milan', detour: 'Brescia', emoji: '🎨', benefit: 'Renaissance charm · lower nightly cost', savings: '₹5K/night' },
+      { main: 'New York', detour: 'Philadelphia', emoji: '🗽', benefit: 'Comparable museums · cheaper stays', savings: '₹15K total' },
+    ];
+    root.innerHTML = pairs.map((p) => `
+      <article class="detour-card" tabindex="0">
+        <p class="detour-card__from">Instead of <strong>${p.main}</strong></p>
+        <span class="detour-card__arrow">↓</span>
+        <p class="detour-card__to">${p.emoji} ${p.detour}</p>
+        <p class="detour-card__benefit">${p.benefit}</p>
+        <span class="detour-card__savings">Save ${p.savings}</span>
+      </article>
+    `).join('');
   }
 
   function initMoodQuiz() {
@@ -463,16 +529,30 @@
     const filtered = (data.countries || []).filter(filters[mood] || (() => true));
     const results = q('#quiz-results'); if (!results) return;
     results.innerHTML = `
-      <p style="text-align: center; color: #cbd5e1; margin-bottom: 14px;">Found ${filtered.length} destinations for you!</p>
-      ${filtered.slice(0, 8).map((c) => `
-        <article class="card" data-country="${c.id}">
+      <p style="grid-column: 1/-1; text-align: center; color: var(--text-2); margin: 8px 0 14px; font-size: 14px;">
+        Found <strong style="color:var(--text-0)">${filtered.length}</strong> destinations matching your style · top picks below
+      </p>
+      ${filtered.slice(0, 8).map((c, i) => `
+        <article class="result-card" data-country="${c.id}" style="--reveal-delay:${i * 0.06}">
+          <span class="result-card__match">${95 - i * 4}% match</span>
           <div class="card__title">${c.flag || ''} ${c.name || ''}</div>
           <div class="card__meta">${c.region || ''}</div>
-          <div class="card__row"><span class="card__pill">Low ${fmt(c.costs?.flights?.low || 0)}</span><span class="card__pill">Mid ${fmt(c.costs?.flights?.mid || 0)}</span></div>
+          <div class="result-card__bar"><div class="result-card__bar-fill" style="width: ${95 - i * 4}%"></div></div>
+          <div class="card__row">
+            <span class="card__pill">From ${fmt(c.costs?.flights?.low || 0)}</span>
+            <span class="card__pill card__pill--success">${(c.tags || [])[0] || 'Trip'}</span>
+          </div>
         </article>
       `).join('')}
     `;
-    toast(`Found ${filtered.length} destinations matching your style`);
+    requestAnimationFrame(() => {
+      qa('.result-card__bar-fill', results).forEach((b) => {
+        const w = b.style.width;
+        b.style.width = '0';
+        requestAnimationFrame(() => { b.style.width = w; });
+      });
+    });
+    toast(`${filtered.length} destinations match your style`);
   }
 
   function initComparisonTool() {
@@ -494,27 +574,118 @@
       const b = byId(c2Sel.value);
       if (!a || !b) return toast('Select two destinations to compare');
       const out = q('#comparison-result'); if (!out) return;
-      out.innerHTML = `
-        <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);color:var(--text);">
-          <tr><td><strong>Metric</strong></td><td><strong>${a.flag} ${a.name}</strong></td><td><strong>${b.flag} ${b.name}</strong></td></tr>
-          <tr><td>Low flight</td><td>${fmt(a.costs?.flights?.low || 0)}</td><td>${fmt(b.costs?.flights?.low || 0)}</td></tr>
-          <tr><td>Best months</td><td>${(a.bestMonths || []).slice(0, 3).join(', ') || 'Year-round'}</td><td>${(b.bestMonths || []).slice(0, 3).join(', ') || 'Year-round'}</td></tr>
-          <tr><td>Visa</td><td>${a.visa?.type || 'Confirm requirements'}</td><td>${b.visa?.type || 'Confirm requirements'}</td></tr>
-          <tr><td>Region</td><td>${a.region}</td><td>${b.region}</td></tr>
-          <tr><td>Sustainability</td><td>${a.sustainability?.rating ?? 'N/A'}/5 🌿</td><td>${b.sustainability?.rating ?? 'N/A'}/5 🌿</td></tr>
-        </table>
+
+      const monthsName = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const aBest = (a.bestMonths || []).slice(0, 3).map((m) => monthsName[m - 1]).join(', ') || 'Year-round';
+      const bBest = (b.bestMonths || []).slice(0, 3).map((m) => monthsName[m - 1]).join(', ') || 'Year-round';
+      const aSus = a.sustainability?.rating ?? 0;
+      const bSus = b.sustainability?.rating ?? 0;
+      const aFlight = a.costs?.flights?.low || 0;
+      const bFlight = b.costs?.flights?.low || 0;
+
+      const winner = (av, bv, lower = true) => {
+        if (!av || !bv) return '';
+        if (lower ? av < bv : av > bv) return 'winner';
+        if (lower ? av > bv : av < bv) return 'winner alt';
+        return '';
+      };
+
+      const pane = (cls, c, side) => `
+        <div class="comparison-pane ${cls}">
+          <div class="comparison-pane__head">
+            <div class="comparison-pane__flag">${c.flag || ''}</div>
+            <div>
+              <p class="comparison-pane__name">${c.name || ''}</p>
+              <p class="comparison-pane__region">${c.region || ''}</p>
+            </div>
+          </div>
+          <div class="comparison-pane__row">
+            <span>Flight (low)</span>
+            <strong>${fmt(c.costs?.flights?.low || 0)} ${side === 'a' && winner(aFlight, bFlight) ? '<span class="winner">CHEAPER</span>' : ''}${side === 'b' && winner(bFlight, aFlight) ? '<span class="winner">CHEAPER</span>' : ''}</strong>
+          </div>
+          <div class="comparison-pane__row">
+            <span>Stay / night</span>
+            <strong>${fmt(c.costs?.accommodation?.budget || 0)}</strong>
+          </div>
+          <div class="comparison-pane__row">
+            <span>Meals / day</span>
+            <strong>${fmt(c.costs?.meals?.budget || 0)}</strong>
+          </div>
+          <div class="comparison-pane__row">
+            <span>Best months</span>
+            <strong>${aBest && side === 'a' ? aBest : bBest}</strong>
+          </div>
+          <div class="comparison-pane__row">
+            <span>Currency</span>
+            <strong>${c.currency || '—'}</strong>
+          </div>
+          <div class="comparison-pane__row">
+            <span>Visa</span>
+            <strong>${(typeof c.visa === 'string' ? c.visa : c.visa?.type) || 'Check'}</strong>
+          </div>
+          <div class="comparison-pane__row">
+            <span>Eco rating</span>
+            <strong>${c.sustainability?.rating ?? '—'}/5 🌿${side === 'a' && aSus > bSus ? '<span class="winner">GREENER</span>' : ''}${side === 'b' && bSus > aSus ? '<span class="winner">GREENER</span>' : ''}</strong>
+          </div>
+        </div>
       `;
+
+      out.innerHTML = pane('comparison-pane--a', a, 'a') + pane('comparison-pane--b', b, 'b');
       toast(`Comparing ${a.name} and ${b.name}`);
     });
   }
 
+  // Phase 7: Set-Jetting Cinematic Structure
   function renderSetJettingDestinations() {
     const root = q('#setjetting-cards'); if (!root) return;
-    root.innerHTML = (getData().countries || [])
-      .filter((c) => (c.movies || []).length > 0)
-      .slice(0, 10)
-      .map((c) => `<article class="setjetting-card"><p class="setjetting-card__title">${c.flag || ''} ${c.name || ''}</p><p class="setjetting-card__movie">Featured in: ${(c.movies || []).slice(0, 2).join(', ')}</p></article>`)
-      .join('');
+    const data = getData();
+    const countries = (data.countries || []).filter((c) => (c.movies || []).length > 0);
+    root.innerHTML = countries.slice(0, 6).map((c) => {
+      const movie = (c.movies || [])[0] || 'Unknown Title';
+      // Matches the exact CSS gradient layout from Phase 7
+      return `
+        <article class="setjetting-card" tabindex="0" data-country="${c.id}">
+          <p class="setjetting-card__title">${c.flag || ''} ${c.name || ''}</p>
+          <p class="setjetting-card__movie">Featured in: ${movie}</p>
+        </article>
+      `;
+    }).join('');
+  }
+
+  // Trending 2025 — horizontal scroller of curated destinations
+  function renderTrendingStrip() {
+    const root = q('#trending-strip'); if (!root) return;
+    const data = getData();
+    const countries = (data.countries || []).filter((c) => c.trending);
+    if (!countries.length) { root.innerHTML = ''; return; }
+
+    root.innerHTML = countries.map((c) => {
+      const t = c.trending;
+      const backdrop = renderBackdrop(c, { w: 480, h: 600 });
+      const visaText = typeof c.visa === 'string' ? c.visa : (c.visa && c.visa.type) || '';
+      return `
+        <article class="trending-card" data-country="${c.id}" tabindex="0">
+          <div class="trending-card__backdrop" style="background-image:url('${backdrop}');"></div>
+          <div class="trending-card__scrim"></div>
+          <span class="trending-card__badge">${t.badge || 'Trending'}</span>
+          <div class="trending-card__body">
+            <h3 class="trending-card__name">${c.flag || ''} ${c.name || ''}</h3>
+            <p class="trending-card__why">${t.why || ''}</p>
+            <span class="trending-card__savings">↓ ${t.savings || 'See latest fare'}</span>
+            <p class="trending-card__visa">${visaText}</p>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    qa('.trending-card', root).forEach((card) => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.country;
+        recordCountryVisit(id);
+        navigateTo('monthwise');
+        toast(`Exploring ${byId(id)?.name || ''}`);
+      });
+    });
   }
 
   function recordCountryVisit(countryId) {
@@ -542,6 +713,7 @@
     initMoodQuiz();
     initComparisonTool();
     renderSetJettingDestinations();
+    renderTrendingStrip();
     initPassportStamps();
     wirePassportStamps();
   }
@@ -554,7 +726,6 @@
   buildBudget();
   initSearch();
   initSafeAreas();
-  initScrollReveal();
   initPhase1();
   if (document.readyState === 'complete' || document.readyState === 'interactive') initGlobe();
   else window.addEventListener('DOMContentLoaded', initGlobe);

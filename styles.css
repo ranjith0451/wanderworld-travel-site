@@ -1,22 +1,25 @@
 /* WanderWorld 3D — Modern UI, scroll animations, mobile-first */
+
+/* Phase 8: Color Theme Scrub Variables (Dynamic Hues) */
 :root {
   --bg: #070b22;
   --surface: #0f1538;
   --surface-2: #182050;
   --muted: #cbd5e1;
   --text: #f3f4f6;
-  --accent: #7c3aed;
-  --accent-2: #22d3ee;
+  --chapter-hue: 280; /* Default Discover */
+  --accent: hsl(var(--chapter-hue), 80%, 65%);
+  --accent-2: hsl(calc(var(--chapter-hue) - 80), 80%, 65%);
   --border: rgba(255,255,255,0.12);
   --shadow: 0 10px 30px rgba(0,0,0,0.45);
   --radius: 20px;
   --safe-bottom: env(safe-area-inset-bottom, 16px);
 }
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-html, body {
-  overscroll-behavior-y: none;
-}
+html, body { overscroll-behavior-y: none; }
+
 body {
   margin: 0;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -27,6 +30,7 @@ body {
   color: var(--text);
   min-height: 100vh;
   padding-bottom: calc(84px + var(--safe-bottom));
+  transition: --accent 0.5s ease; /* Smooth color transition */
 }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; }
@@ -57,6 +61,7 @@ button { font: inherit; color: inherit; }
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   display:grid; place-items:center; font-weight:700; color:#fff;
   box-shadow: 0 0 22px rgba(124,58,237,0.55);
+  transition: background 0.4s ease;
 }
 .brand__title { font-family: "Playfair Display", Georgia, serif; font-weight:700; font-size: 20px; letter-spacing: -0.01em; }
 .brand__badge {
@@ -72,6 +77,7 @@ button { font: inherit; color: inherit; }
   width: 40px; height: 40px;
   display:grid; place-items:center;
 }
+
 .hero {
   position: relative; overflow: hidden;
   padding: 30px 18px 36px;
@@ -88,6 +94,11 @@ button { font: inherit; color: inherit; }
 .hero__content {
   position: relative; z-index: 1;
   max-width: 1020px; margin: 0 auto;
+}
+/* Phase 4: Hero Mask Reveal */
+.hero__title, .section__title {
+  clip-path: inset(0% 0% 0% 0%);
+  will-change: clip-path, transform;
 }
 .hero__title {
   font-family: "Playfair Display", Georgia, serif;
@@ -111,14 +122,15 @@ button { font: inherit; color: inherit; }
 }
 .hero__actions { display:flex; gap:12px; flex-wrap: wrap; }
 .hero__globe { margin-top: 22px; }
+
 .btn {
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   padding: 12px 16px; border-radius: 999px; font-weight: 600; font-size: 14px;
-  transition: transform .08s ease, filter .2s ease;
+  transition: transform .08s ease, filter .2s ease, background 0.4s ease;
 }
 .btn--primary {
   color: white; border: none;
-  background: linear-gradient(135deg, var(--accent), #4f2dc7);
+  background: linear-gradient(135deg, var(--accent), hsl(calc(var(--chapter-hue) + 20), 80%, 45%));
   box-shadow: 0 10px 26px rgba(124,58,237,0.35);
 }
 .btn--ghost {
@@ -132,6 +144,7 @@ button { font: inherit; color: inherit; }
 .section {
   max-width: 1120px; margin: 0 auto;
   padding: 28px 18px;
+  scroll-margin-top: 96px;
 }
 .section__title {
   font-family: "Playfair Display", Georgia, serif;
@@ -233,10 +246,27 @@ button { font: inherit; color: inherit; }
 .budget-card__label { color:#94a3b8; font-size:12px; margin:0 0 4px; }
 .budget-card__value { font-weight:700; font-size:18px; margin:0; }
 
-.world-panel { position:relative; }
+.world-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  isolation: isolate;
+}
 .world-canvas {
-  width:100%; height: 58vh; min-height: 340px; display:block; border-radius: var(--radius);
+  width: 100%;
+  height: min(68vh, 520px);
+  min-height: 320px;
+  display: block;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
+  background: radial-gradient(ellipse at top, rgba(124,58,237,0.24), rgba(7,11,34,0.86) 72%);
+}
+@media (max-width: 768px) {
+  .world-panel { padding: 12px; }
+  .world-canvas { height: min(60vh, 420px); min-height: 280px; }
 }
 .world-tooltip {
   position:absolute; top:14px; right:14px;
@@ -270,6 +300,7 @@ button { font: inherit; color: inherit; }
 .search-item__title { font-weight:700; font-size:14px; margin:0 0 4px; }
 .search-item__desc { color:#94a3b8; font-size:12px; margin:0; }
 
+/* Phase 10: Bottom Nav Active Sync */
 .app-shell__bottom {
   position: fixed; left: 0; right: 0; bottom: 0;
   z-index: 200;
@@ -284,10 +315,20 @@ button { font: inherit; color: inherit; }
   display:flex; flex-direction:column; align-items:center; gap:4px;
   color:#94a3b8; font-size:11px; font-weight:600;
   padding: 6px 10px; border-radius:12px;
-  transition: color .2s ease, transform .1s ease;
+  transition: color .2s ease, transform .1s ease, opacity 0.3s ease;
+  opacity: 0.5;
 }
-.nav-item.active { color:#f3f4f6; }
+.nav-item.active { color:#f3f4f6; opacity: 1; }
 .nav-item:active { transform: translateY(1px); }
+.nav-item.active::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin: 4px auto 0;
+}
 
 .search-overlay {
   position: fixed; inset: 0; z-index: 300;
@@ -302,6 +343,7 @@ button { font: inherit; color: inherit; }
 .search-overlay.open { transform: translateY(0); }
 .search-overlay__bar { display:flex; gap:10px; align-items:center; }
 .search-overlay__results { margin-top:14px; overflow:auto; flex:1; }
+
 .toast {
   position: fixed; bottom: calc(84px + var(--safe-bottom)); left: 50%;
   transform: translate(-50%, 60px); opacity:0;
@@ -317,8 +359,11 @@ button { font: inherit; color: inherit; }
   .month-cards, .policy-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 }
 
+/* ============================================================
+   Phase 1 & Premium Phase Additions
+   ============================================================ */
 
-/* Phase 1 additions */
+/* Phase 1: Quiz & Detour */
 .quiz-form { display: grid; gap: 12px; margin-bottom: 20px; }
 .quiz-option { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: background .2s ease; }
 .quiz-option:hover { background: rgba(255,255,255,0.08); }
@@ -329,14 +374,54 @@ button { font: inherit; color: inherit; }
 .detour-card__from { color:#cbd5e1; margin-bottom:8px; }
 .detour-card__to { font-size: 18px; font-weight: 700; margin: 8px 0; background: linear-gradient(90deg, var(--accent-2), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .detour-card__benefit { color:#94a3b8; font-size:13px; font-weight:600; padding-top:8px; border-top:1px solid var(--border); }
+
+/* Phase 1: Comparison */
 .comparison-panel { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
 .comparison-result { margin-top: 20px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x:auto; }
 .comparison-result table { width:100%; border-collapse: collapse; }
 .comparison-result td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
 .comparison-result td:first-child { font-weight: 600; color: #cbd5e1; }
-.setjetting-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-.setjetting-card { background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; position: relative; overflow: hidden; }
-.setjetting-card__title { font-weight: 700; margin-bottom: 6px; }
-.setjetting-card__movie { font-size: 12px; color: #94a3b8; }
+
+/* Phase 7: Set-Jetting Cinematic (Overrides Phase 1 basics) */
+.setjetting-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.setjetting-card {
+  aspect-ratio: 2 / 3;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.setjetting-card:hover { transform: scale(1.03); }
+.setjetting-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%);
+}
+.setjetting-card__title { position: relative; z-index: 2; font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+.setjetting-card__movie { position: relative; z-index: 2; font-size: 0.9rem; opacity: 0.8; }
+
+/* Phase 1: Eco Badge */
 .eco-badge { display:inline-block; background: rgba(34,197,94,0.2); color: #86efac; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; margin-left: 8px; }
 .eco-badge::before { content: "🌱 "; }
+
+/* Phase 5: Pinned Horizontal Scroll Layout */
+#trending-2025 { overflow: hidden; }
+.trending-strip {
+  display: flex;
+  gap: 2rem;
+  padding: 0 5vw;
+  will-change: transform;
+}
+.trending-card { min-width: 300px; }
