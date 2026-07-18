@@ -410,15 +410,7 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
   box-shadow: var(--glass-shadow);
   overflow: hidden;
 }
-.glass::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image: url("/assets/noise.svg");
-  background-size: 240px 240px;
-  background-repeat: repeat;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  z-index: 0;
-}
+/* Removed .glass::before noise.svg to fix 404 console errors */
 .glass::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background:
@@ -616,13 +608,7 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
   will-change: transform;
   cursor: pointer;
 }
-.card::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image: url("/assets/noise.svg");
-  background-size: 240px 240px;
-  opacity: 0.04;
-  mix-blend-mode: overlay;
-}
+/* Removed .card::before noise.svg to fix 404 console errors */
 .card::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 50%);
@@ -770,13 +756,7 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
-.world-panel::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image: url("/assets/noise.svg");
-  background-size: 240px 240px;
-  opacity: 0.04;
-  mix-blend-mode: overlay;
-}
+/* Removed .world-panel::before noise.svg to fix 404 console errors */
 .world-canvas {
   width: 100%;
   height: 64vh; min-height: 420px;
@@ -875,12 +855,7 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
   overflow: hidden;
   transition: transform var(--dur-base) var(--ease-emphasis), border-color var(--dur-base);
 }
-.detour-card::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image: url("/assets/noise.svg");
-  background-size: 240px; opacity: 0.05;
-  mix-blend-mode: overlay;
-}
+/* Removed .detour-card::before noise.svg to fix 404 console errors */
 .detour-card:hover {
   transform: translateY(-3px);
   border-color: rgba(124, 92, 255, 0.3);

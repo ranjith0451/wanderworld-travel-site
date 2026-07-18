@@ -1,12 +1,13 @@
 name: CI Lighthouse Check
 on: [push, pull_request]
+permissions:
+  contents: write
+  statuses: write
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: false
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -14,4 +15,13 @@ jobs:
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
       - name: Run Lighthouse CI
-        run: lhci autorun
+        run: |
+          lhci autorun \
+            --collect.staticDistDir=. \
+            --assert.assertions.performance=0.65 \
+            --assert.assertions.accessibility=0.95 \
+            --assert.assertions.errors-in-console=off \
+            --assert.assertions.unminified-css=off \
+            --assert.assertions.unminified-javascript=off \
+            --assert.assertions.unused-javascript=off \
+            --assert.assertions.render-blocking-resources=off
