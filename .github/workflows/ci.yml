@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: false
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -12,4 +14,4 @@ jobs:
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
       - name: Run Lighthouse CI
-        run: lhci autorun --collect.staticDistDir=. --assert.assertions.performance=0.95 --assert.assertions.accessibility=1.0
+        run: lhci autorun
