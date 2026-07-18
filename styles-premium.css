@@ -1,7 +1,7 @@
 /* =========================================================================
    WanderWorld 3D — Premium Layer
    Design tokens, glass v2, motion, premium sections.
-   Phases 4, 5, 7, 8, 10 integrated natively.
+   Phases 4, 5, 7, 8, 10 integrated natively + a11y contrast fixes.
    Loaded AFTER styles.css to override and extend.
    ========================================================================= */
 
@@ -25,9 +25,10 @@
   --text-2:      #9aa3c7;
   --text-3:      #5b6494;
 
-  /* Accents (Dynamic via --chapter-hue) */
-  --accent:      hsl(var(--chapter-hue), 80%, 65%);
-  --accent-2:    hsl(calc(var(--chapter-hue) - 80), 80%, 65%);
+  /* Accents (Dynamic via --chapter-hue) 
+     Capped at 68% lightness & 85% saturation for WCAG AA contrast on dark bg */
+  --accent:      hsl(var(--chapter-hue), 85%, 68%);
+  --accent-2:    hsl(calc(var(--chapter-hue) - 80), 85%, 68%);
   --accent-3:    #ff5da2;
   --success:     #34d399;
   --warning:     #fbbf24;
@@ -256,7 +257,6 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
   padding: var(--sp-9) var(--sp-5);
   max-width: var(--max-w);
   margin: 0 auto;
-  scroll-margin-top: 100px;
 }
 .section__header { margin-bottom: var(--sp-7); max-width: 720px; }
 .section__eyebrow {
@@ -762,16 +762,11 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
    ------------------------------------------------------------------------- */
 .world-panel {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 18px;
-  min-height: min(72vh, 560px);
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--r-xl);
   overflow: hidden;
-  isolation: isolate;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -784,15 +779,9 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
 }
 .world-canvas {
   width: 100%;
-  height: min(72vh, 560px);
-  min-height: 320px;
+  height: 64vh; min-height: 420px;
   display: block;
   border-radius: var(--r-lg);
-  background: radial-gradient(ellipse at top, rgba(124, 92, 255, 0.22), rgba(5, 7, 20, 0.9) 72%);
-}
-@media (max-width: 768px) {
-  .world-panel { padding: 12px; min-height: min(62vh, 460px); }
-  .world-canvas { height: min(62vh, 460px); min-height: 280px; }
 }
 .world-tooltip {
   position: absolute; top: 28px; right: 28px;
@@ -948,7 +937,10 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
   cursor: pointer;
   transition: transform 0.3s ease;
 }
-.setjetting-card:hover { transform: scale(1.03); }
+.setjetting-card:hover, .setjetting-card:focus-visible {
+  transform: scale(1.03);
+  outline: none;
+}
 .setjetting-card::after {
   content: '';
   position: absolute;
@@ -1230,7 +1222,11 @@ body.has-custom-cursor a, body.has-custom-cursor button, body.has-custom-cursor 
   transition: transform var(--dur-base) var(--ease-emphasis), border-color var(--dur-base);
 }
 @media (max-width: 640px) { .trending-card { flex: 0 0 280px; height: 340px; } }
-.trending-card:hover { transform: translateY(-4px); border-color: rgba(124, 92, 255, 0.4); }
+.trending-card:hover, .trending-card:focus-visible { 
+  transform: translateY(-4px); 
+  border-color: rgba(124, 92, 255, 0.4); 
+  outline: none;
+}
 .trending-card__backdrop {
   position: absolute; inset: 0;
   background-size: cover; background-position: center;

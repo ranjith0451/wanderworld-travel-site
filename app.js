@@ -290,24 +290,25 @@
     const container = q('#hero-globe');
     const canvas = q('#world-canvas');
     const tooltip = q('#world-tooltip');
-    const host = canvas || container;
-    if (!host || typeof THREE === 'undefined') return;
+    const target = container || canvas;
+    if (!target || typeof THREE === 'undefined') return;
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const scene = new THREE.Scene();
     let cam;
-    const rect = host.getBoundingClientRect();
-    const w = rect.width || 320;
-    const h = rect.height || 240;
-    renderer.setSize(w, h, false);
-    cam = host === canvas
-      ? new THREE.PerspectiveCamera(48, (w || 800) / Math.max(h || 500, 1), 0.2, 60)
-      : new THREE.PerspectiveCamera(50, w / Math.max(h, 1), 0.2, 40);
-    if (host === canvas) {
+    if (target === canvas) {
+      const { clientWidth: w = target.clientWidth, clientHeight: h = target.clientHeight } = target.getBoundingClientRect();
+      renderer.setSize(w, h, false);
+      cam = new THREE.PerspectiveCamera(48, (w || 800) / Math.max(h || 500, 1), 0.2, 60);
       cam.position.set(0, 0.6, 3.2);
     } else {
+      const rect = target.getBoundingClientRect();
+      const w = rect.width || 320;
+      const h = rect.height || 180;
+      renderer.setSize(w, h, false);
+      cam = new THREE.PerspectiveCamera(50, w / Math.max(h, 1), 0.2, 40);
       cam.position.set(0, 0.15, 1.8);
     }
     scene.add(cam);
@@ -368,7 +369,7 @@
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     function setPointer(event) {
-      const rect = host.getBoundingClientRect();
+      const rect = (target === canvas ? canvas : container).getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     }
@@ -399,9 +400,9 @@
     });
 
     function resize() {
-      const rect = host.getBoundingClientRect();
+      const rect = (target === canvas ? canvas : container).getBoundingClientRect();
       const w = rect.width || 320;
-      const h = rect.height || 240;
+      const h = rect.height || 180;
       renderer.setSize(w, h, false);
       if (cam.isPerspectiveCamera) cam.aspect = w / Math.max(h, 1);
       cam.updateProjectionMatrix();
@@ -502,7 +503,7 @@
       { main: 'New York', detour: 'Philadelphia', emoji: '🗽', benefit: 'Comparable museums · cheaper stays', savings: '₹15K total' },
     ];
     root.innerHTML = pairs.map((p) => `
-      <article class="detour-card" tabindex="0">
+      <article class="detour-card" role="button" tabindex="0" aria-label="Detour alternative: ${p.detour} instead of ${p.main}">
         <p class="detour-card__from">Instead of <strong>${p.main}</strong></p>
         <span class="detour-card__arrow">↓</span>
         <p class="detour-card__to">${p.emoji} ${p.detour}</p>
@@ -644,7 +645,7 @@
       const movie = (c.movies || [])[0] || 'Unknown Title';
       // Matches the exact CSS gradient layout from Phase 7
       return `
-        <article class="setjetting-card" tabindex="0" data-country="${c.id}">
+        <article class="setjetting-card" role="button" tabindex="0" aria-label="${c.name || ''} featured in ${movie}" data-country="${c.id}">
           <p class="setjetting-card__title">${c.flag || ''} ${c.name || ''}</p>
           <p class="setjetting-card__movie">Featured in: ${movie}</p>
         </article>
@@ -664,7 +665,7 @@
       const backdrop = renderBackdrop(c, { w: 480, h: 600 });
       const visaText = typeof c.visa === 'string' ? c.visa : (c.visa && c.visa.type) || '';
       return `
-        <article class="trending-card" data-country="${c.id}" tabindex="0">
+        <article class="trending-card" data-country="${c.id}" role="button" tabindex="0" aria-label="Explore ${c.name || ''}">
           <div class="trending-card__backdrop" style="background-image:url('${backdrop}');"></div>
           <div class="trending-card__scrim"></div>
           <span class="trending-card__badge">${t.badge || 'Trending'}</span>
@@ -717,6 +718,17 @@
     initPassportStamps();
     wirePassportStamps();
   }
+
+  // Keyboard accessibility for custom clickable articles (role="button")
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const target = e.target;
+      if (target.matches('.trending-card, .setjetting-card, .detour-card')) {
+        e.preventDefault();
+        target.click();
+      }
+    }
+  });
 
   // Init
   renderMonthTabs();
