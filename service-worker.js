@@ -1,10 +1,16 @@
-const CACHE_NAME = 'travel-site-next-v1';
+const CACHE_NAME = 'travel-site-next-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
+  '/styles-premium.css',
   '/app.js',
-  '/data/countries.js'
+  '/app-motion.js',
+  '/data/countries.js',
+  '/manifest.json',
+  '/assets/noise.svg',
+  '/assets/icons/icon.svg',
+  '/assets/logo-mark.svg'
 ];
 
 self.addEventListener('install', (event) => {
