@@ -1,0 +1,13 @@
+ci:
+  collect:
+    numberOfRuns: 3
+    url: http://localhost:39089
+  assert:
+    assertions:
+      # Require at least 90% for performance and accessibility. Adjust these to your target.
+      categories:performance: ['error', {minScore: 0.90}]
+      categories:accessibility: ['warn', {minScore: 0.90}]
+      categories:best-practices: ['warn', {minScore: 0.90}]
+      categories:seo: ['warn', {minScore: 0.90}]
+  upload:
+    target: temporary-public-storage
